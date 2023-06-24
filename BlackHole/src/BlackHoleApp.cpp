@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include "bhpch.h"
+#include "Core/Log.h"
 
 int main()
 {
-    printf("Hello, Black Hole!\n");
+    Log::Init();
 }

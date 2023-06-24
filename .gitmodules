@@ -1,0 +1,3 @@
+[submodule "BlackHole/vendor/spdlog"]
+	path = BlackHole/vendor/spdlog
+	url = git@github.com:gabime/spdlog.git
