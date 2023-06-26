@@ -39,6 +39,7 @@ public:
     {
         std::ostringstream oss;
         oss << "MouseScrolledEvent: " << m_XOffset << ", " << m_YOffset;
+        return oss.str();
     }
 
     EVENT_CLASS_TYPE(MouseScrolled)
@@ -70,6 +71,7 @@ public:
     {
         std::ostringstream oss;
         oss << "MouseButtonPressedEvent: " << m_Button;
+        return oss.str();
     }
 
     EVENT_CLASS_TYPE(MouseButtonPressed)
@@ -85,6 +87,7 @@ public:
     {
         std::ostringstream oss;
         oss << "MouseButtonReleasedEvent: " << m_Button;
+        return oss.str();
     }
 
     EVENT_CLASS_TYPE(MouseButtonReleased)

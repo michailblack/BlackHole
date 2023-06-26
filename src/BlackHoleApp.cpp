@@ -4,5 +4,6 @@
 
 int main()
 {
+    Log::Init();
     Application().Run();
 }

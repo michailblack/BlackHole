@@ -4,8 +4,8 @@
     <Filter Include="Core">
       <UniqueIdentifier>{2EB4837C-1AEB-840D-C3D7-6A10AFED000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Events">
-      <UniqueIdentifier>{52201B74-BED5-9369-47CA-8D40B37E8A6D}</UniqueIdentifier>
+    <Filter Include="Events">
+      <UniqueIdentifier>{3A8963B1-262B-8E87-0FE6-A1DBFB2615D8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -15,17 +15,11 @@
     <ClInclude Include="src\Core\Core.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Events\ApplicationEvent.h">
-      <Filter>Core\Events</Filter>
+    <ClInclude Include="src\Core\Layer.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\Events\Event.h">
-      <Filter>Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Core\Events\KeyEvent.h">
-      <Filter>Core\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Core\Events\MouseEvent.h">
-      <Filter>Core\Events</Filter>
+    <ClInclude Include="src\Core\LayerStack.h">
+      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="src\Core\Log.h">
       <Filter>Core</Filter>
@@ -33,11 +27,29 @@
     <ClInclude Include="src\Core\Window.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Events\ApplicationEvent.h">
+      <Filter>Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Events\Event.h">
+      <Filter>Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Events\KeyEvent.h">
+      <Filter>Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Events\MouseEvent.h">
+      <Filter>Events</Filter>
+    </ClInclude>
     <ClInclude Include="src\bhpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BlackHoleApp.cpp" />
     <ClCompile Include="src\Core\Application.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Layer.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\LayerStack.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Core\Log.cpp">

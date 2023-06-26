@@ -12,8 +12,10 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to the root folder
 IncludeDir = {}
 IncludeDir["GLFW"] = "vendor/GLFW/include"
+IncludeDir["Glad"] = "vendor/Glad/include"
 
 include "vendor/GLFW"
+include "vendor/Glad"
 
 project "BlackHole"
     kind "ConsoleApp"
@@ -35,12 +37,14 @@ project "BlackHole"
     {
         "src/",
         "vendor/spdlog/include",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.Glad}"
     }
 
     links
     {
         "GLFW",
+        "Glad",
         "opengl32.lib"
     }
 
@@ -51,7 +55,8 @@ project "BlackHole"
 
         defines
         {
-            "BH_PLATFORM_WINDOWS"
+            "BH_PLATFORM_WINDOWS",
+            "GLFW_INCLUDE_NONE"
         }
 
     filter "configurations:Debug"

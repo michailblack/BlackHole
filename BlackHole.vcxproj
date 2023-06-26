@@ -59,8 +59,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>bhpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BH_PLATFORM_WINDOWS;BH_DEBUG;BH_ENABLE_ASSERTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BH_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;BH_DEBUG;BH_ENABLE_ASSERTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -78,8 +78,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>bhpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>BH_PLATFORM_WINDOWS;BH_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BH_PLATFORM_WINDOWS;GLFW_INCLUDE_NONE;BH_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -99,17 +99,21 @@
   <ItemGroup>
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Core\Core.h" />
-    <ClInclude Include="src\Core\Events\ApplicationEvent.h" />
-    <ClInclude Include="src\Core\Events\Event.h" />
-    <ClInclude Include="src\Core\Events\KeyEvent.h" />
-    <ClInclude Include="src\Core\Events\MouseEvent.h" />
+    <ClInclude Include="src\Core\Layer.h" />
+    <ClInclude Include="src\Core\LayerStack.h" />
     <ClInclude Include="src\Core\Log.h" />
     <ClInclude Include="src\Core\Window.h" />
+    <ClInclude Include="src\Events\ApplicationEvent.h" />
+    <ClInclude Include="src\Events\Event.h" />
+    <ClInclude Include="src\Events\KeyEvent.h" />
+    <ClInclude Include="src\Events\MouseEvent.h" />
     <ClInclude Include="src\bhpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BlackHoleApp.cpp" />
     <ClCompile Include="src\Core\Application.cpp" />
+    <ClCompile Include="src\Core\Layer.cpp" />
+    <ClCompile Include="src\Core\LayerStack.cpp" />
     <ClCompile Include="src\Core\Log.cpp" />
     <ClCompile Include="src\Core\Window.cpp" />
     <ClCompile Include="src\bhpch.cpp">
@@ -119,6 +123,9 @@
   <ItemGroup>
     <ProjectReference Include="vendor\GLFW\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="vendor\Glad\Glad.vcxproj">
+      <Project>{BDD6857C-A90D-870D-52FA-6C103E10030F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

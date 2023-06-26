@@ -10,7 +10,7 @@ void Log::Init()
     spdlog::set_pattern("%^[%T] %n: %v%$");
     spdlog::set_level(spdlog::level::trace);
 
-    s_Logger = spdlog::stdout_color_mt("APP");
+    s_Logger = spdlog::stdout_color_mt("BLACKHOLE");
 }
 
 void Log::SetLogLevel(spdlog::level::level_enum level)
