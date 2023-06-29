@@ -9,3 +9,6 @@
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
+
+# Dear ImGui artifacts
+imgui.ini
