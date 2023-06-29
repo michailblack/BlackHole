@@ -11,15 +11,21 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Include directories relative to the root folder
 IncludeDir = {}
-IncludeDir["GLFW"] = "vendor/GLFW/include"
-IncludeDir["Glad"] = "vendor/Glad/include"
+IncludeDir["spdlog"]   = "vendor/spdlog/include"
+IncludeDir["GLFW"]   = "vendor/GLFW/include"
+IncludeDir["Glad"]   = "vendor/Glad/include"
+IncludeDir["ImGui"]  = "vendor/ImGui"
+IncludeDir["glm"]    = "vendor/glm"
 
 include "vendor/GLFW"
 include "vendor/Glad"
+include "vendor/ImGui"
 
 project "BlackHole"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++20"
+    staticruntime "on"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -30,27 +36,30 @@ project "BlackHole"
     files
     {
         "src/**.h",
-        "src/**.cpp"
+        "src/**.cpp",
+        "%{IncludeDir.glm}/**.hpp",
+        "%{IncludeDir.glm}/**.inl",
     }
 
     includedirs
     {
         "src/",
-        "vendor/spdlog/include",
+        "%{IncludeDir.spdlog}",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.Glad}"
+        "%{IncludeDir.Glad}",
+        "%{IncludeDir.ImGui}",
+        "%{IncludeDir.glm}"
     }
 
     links
     {
         "GLFW",
         "Glad",
+        "ImGui",
         "opengl32.lib"
     }
 
     filter "system:windows"
-        cppdialect "C++20"
-        staticruntime "On"
         systemversion "latest"
 
         defines
@@ -61,8 +70,10 @@ project "BlackHole"
 
     filter "configurations:Debug"
         defines { "BH_DEBUG", "BH_ENABLE_ASSERTS" }
-        symbols "On"
+        runtime "Debug"
+        symbols "on"
         
     filter "configurations:Release"
         defines { "BH_RELEASE" }
-        optimize "On"
+        runtime "Release"
+        optimize "on"

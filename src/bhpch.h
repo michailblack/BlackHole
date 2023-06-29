@@ -1,19 +1,21 @@
 #pragma once
 
+#include <algorithm>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <utility>
-#include <algorithm>
-#include <functional>
 
-#include <string>
 #include <sstream>
-#include <vector>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
-#include "Core/Core.h"
-#include "Core/Log.h"
+#include "BlackHole/Core/Application.h"
+#include "BlackHole/Core/Core.h"
+#include "BlackHole/Core/Layer.h"
+#include "BlackHole/Core/Log.h"
 
 #ifdef BH_PLATFORM_WINDOWS
     #include <Windows.h>

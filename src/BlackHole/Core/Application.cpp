@@ -3,27 +3,45 @@
 
 #include <glad/glad.h>
 
-#define BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
+#include "BlackHole/ImGui/ImGuiLayer.h"
+
+Application* Application::s_Instance = nullptr;
 
 Application::Application()
 {
-    m_Window = std::unique_ptr<Window>(new Window());
-    m_Window->SetCallbackFunction(BIND_EVENT_FN(OnEvent));
+    m_Window = std::make_unique<Window>();
+    m_Window->SetCallbackFunction(BH_BIND_EVENT_FN(OnEvent));
 }
 
 Application::~Application()
 {
+    for (const auto layer : m_LayerStack)
+        layer->OnDetach();
+    delete s_Instance;
+}
+
+void Application::Init()
+{
+    if (!s_Instance)
+        s_Instance = new Application();
+
+    s_Instance->PushOverlay(new ImGuiLayer());
 }
 
 void Application::Run()
 {
-    while (m_Running)
+    while (m_IsRunning)
     {
         glClearColor(1, 0, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
         for (Layer* layer : m_LayerStack)
             layer->OnUpdate();
+
+        ImGuiLayer::Begin();
+        for (Layer* layer : m_LayerStack)
+            layer->OnImGuiRender();
+        ImGuiLayer::End();
 
         m_Window->OnUpdate();
     }
@@ -32,30 +50,32 @@ void Application::Run()
 void Application::OnEvent(Event& e)
 {
     EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
+    dispatcher.Dispatch<WindowCloseEvent>(BH_BIND_EVENT_FN(OnWindowClose));
 
     for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
     {
         (*--it)->OnEvent(e);
-        if (e.Handled)
+        if (e.handled)
             break;
     }
 
-    BH_LOG_TRACE(e.ToString());
+    BH_LOG_TRACE(e);
 }
 
 void Application::PushLayer(Layer* layer)
 {
     m_LayerStack.PushLayer(layer);
+    layer->OnAttach();
 }
 
 void Application::PushOverlay(Layer* overlay)
 {
     m_LayerStack.PushOverlay(overlay);
+    overlay->OnAttach();
 }
 
 bool Application::OnWindowClose(WindowCloseEvent& e)
 {
-    m_Running = false;
+    m_IsRunning = false;
     return true;
 }

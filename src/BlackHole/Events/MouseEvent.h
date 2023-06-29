@@ -10,10 +10,9 @@ public:
     MouseMovedEvent(float x, float y)
         : m_MouseX(x), m_MouseY(y) {}
 
-    inline float GetX() const { return m_MouseX; }
-    inline float GetY() const { return m_MouseY; }
-
-    virtual std::string ToString() const override
+    float GetX() const { return m_MouseX; }
+    float GetY() const { return m_MouseY; }
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "MouseMovedEvent: " << m_MouseX << ", " << m_MouseY;
@@ -32,10 +31,10 @@ public:
     MouseScrolledEvent(float xOffset, float yOffset)
         : m_XOffset(xOffset), m_YOffset(yOffset) {}
 
-    inline float GetXOffset() const { return m_XOffset; }
-    inline float GetYOffset() const { return m_YOffset; }
+    float GetXOffset() const { return m_XOffset; }
+    float GetYOffset() const { return m_YOffset; }
 
-    virtual std::string ToString() const override
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "MouseScrolledEvent: " << m_XOffset << ", " << m_YOffset;
@@ -51,7 +50,7 @@ private:
 class MouseButtonEvent : public Event
 {
 public:
-    inline int GetMouseButton() const { return m_Button; }
+    int GetMouseButton() const { return m_Button; }
 
     EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouseButton)
 protected:
@@ -67,7 +66,7 @@ public:
     MouseButtonPressedEvent(int button)
         : MouseButtonEvent(button) {}
 
-    virtual std::string ToString() const override
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "MouseButtonPressedEvent: " << m_Button;
@@ -83,7 +82,7 @@ public:
     MouseButtonReleasedEvent(int button)
         : MouseButtonEvent(button) {}
 
-    virtual std::string ToString() const override
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "MouseButtonReleasedEvent: " << m_Button;

@@ -3,7 +3,10 @@
 #include <string>
 #include <functional>
 
-#include "Core/Core.h"
+#include "BlackHole/Core/Core.h"
+
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 enum class EventType
 {
@@ -34,14 +37,21 @@ class Event
 {
     friend class EventDispatcher;
 public:
-    bool Handled = false;
+    bool handled = false;
 
     virtual EventType GetEventType() const = 0;
     virtual int GetCategoryFlags() const = 0;
     virtual const char* GetName() const = 0;
     virtual std::string ToString() const { return GetName(); }
 
-    inline bool IsInCategory(EventCategory category) const { return GetCategoryFlags() & category; }
+    bool IsInCategory(EventCategory category) const { return GetCategoryFlags() & category; }
+};
+
+template<typename OStream>
+OStream &operator<<(OStream &os, const Event& e)
+{
+    fmt::format_to(std::ostream_iterator<char>(os), "{0}", e.ToString());
+    return os;
 };
 
 class EventDispatcher
@@ -57,13 +67,12 @@ public:
     {
         if (m_Event.GetEventType() == T::GetStaticType())
         {
-            m_Event.Handled |= func(static_cast<T&>(m_Event));
+            m_Event.handled |= func(static_cast<T&>(m_Event));
             return true;
         }
         return false;
     }
+
 private:
     Event& m_Event;
 };
-
-inline std::ostream& operator<<(std::ostream& os, const Event& e) { return os << e.ToString(); }

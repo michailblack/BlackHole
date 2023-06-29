@@ -6,8 +6,8 @@
 
 class LayerStack
 {
-    using LayerStackBuffer   =    std::vector<Layer*>;
-    using LayerStackIterator =    std::vector<Layer*>::iterator;
+    using LayerStackBuffer   =   std::vector<Layer*>;
+    using LayerStackIterator =   std::vector<Layer*>::iterator;
 public:
     LayerStack();
     ~LayerStack();
@@ -21,6 +21,6 @@ public:
     LayerStackIterator end() { return m_Layers.end(); }
 private:
     LayerStackBuffer m_Layers;
-    LayerStackIterator m_LayerInsert;
+    unsigned int m_LayerInsertIndex;
 };
 

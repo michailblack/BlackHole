@@ -1,13 +1,13 @@
 #include "bhpch.h"
 #include "Window.h"
 
-#include "Events/ApplicationEvent.h"
-#include "Events/KeyEvent.h"
-#include "Events/MouseEvent.h"
+#include "BlackHole/Events/ApplicationEvent.h"
+#include "BlackHole/Events/KeyEvent.h"
+#include "BlackHole/Events/MouseEvent.h"
 
 #include <glad/glad.h>
 
-static bool s_GLFWInitialized = false;
+static bool gs_GLFWInitialized = false;
 
 static void GLFWErrorCallback(int error, const char* description)
 {
@@ -42,21 +42,21 @@ void Window::SetVSync(bool enabled)
 
 void Window::Init(const WindowProps& props)
 {
-    m_Data.Title = props.Title;
-    m_Data.Width = props.Width;
-    m_Data.Height = props.Height;
+    m_Data.title = props.title;
+    m_Data.width = props.width;
+    m_Data.height = props.height;
 
-    BH_LOG_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+    BH_LOG_INFO("Creating window {0} ({1}, {2})", props.title, props.width, props.height);
 
-    if (!s_GLFWInitialized)
+    if (!gs_GLFWInitialized)
     {
         int success = glfwInit();
         BH_ASSERT(success, "Could not initialize GLFW!");
         glfwSetErrorCallback(GLFWErrorCallback);
-        s_GLFWInitialized = true;
+        gs_GLFWInitialized = true;
     }
 
-    m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, props.Title.c_str(), nullptr, nullptr);
+    m_Window = glfwCreateWindow(static_cast<int>(props.width), static_cast<int>(props.height), props.title.c_str(), nullptr, nullptr);
     glfwMakeContextCurrent(m_Window);
     int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     BH_ASSERT(status, "Failed to initialize Glad!");
@@ -66,10 +66,10 @@ void Window::Init(const WindowProps& props)
     // Set GLFW callbacks
     glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             
-            data->Width = width;
-            data->Height = height;
+            data->width = width;
+            data->height = height;
 
             WindowResizeEvent e(width, height);
             data->EventCallback(e);
@@ -77,7 +77,7 @@ void Window::Init(const WindowProps& props)
 
     glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             WindowCloseEvent e;
             data->EventCallback(e);
@@ -85,7 +85,7 @@ void Window::Init(const WindowProps& props)
 
     glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             switch (action)
             {
@@ -107,12 +107,15 @@ void Window::Init(const WindowProps& props)
                     data->EventCallback(e);
                     break;
                 }
+                default:
+                    BH_ASSERT(false, "Key action unknown!");
+                    break;
             }
         });
 
     glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             switch (action)
             {
@@ -128,22 +131,25 @@ void Window::Init(const WindowProps& props)
                     data->EventCallback(e);
                     break;
                 }
+                default:
+                    BH_ASSERT(false, "Mouse button action unknown!");
+                    break;
             }
         });
 
     glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-            MouseScrolledEvent e((float)xOffset, (float)yOffset);
+            MouseScrolledEvent e(static_cast<float>(xOffset), static_cast<float>(yOffset));
             data->EventCallback(e);
         });
 
     glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xPos, double yPos)
         {
-            WindowData* data = reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
-            MouseMovedEvent e((float)xPos, (float)yPos);
+            MouseMovedEvent e(static_cast<float>(xPos), static_cast<float>(yPos));
             data->EventCallback(e);
         });
 }

@@ -7,7 +7,7 @@
 class KeyEvent : public Event
 {
 public:
-    inline int GetKeyCode() const { return m_KeyCode; }
+    int GetKeyCode() const { return m_KeyCode; }
 
     EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
 protected:
@@ -23,9 +23,9 @@ public:
     KeyPressedEvent(int keycode, unsigned int repeatCount)
     : KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
-    inline unsigned int GetRepeatCount() const { return m_RepeatCount; }
+    unsigned int GetRepeatCount() const { return m_RepeatCount; }
 
-    virtual std::string ToString() const override
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "KeyPressedEvent: " << m_KeyCode << " (" << m_RepeatCount << " repeats)";
@@ -43,7 +43,7 @@ public:
     KeyReleasedEvent(int keycode)
         : KeyEvent(keycode) {}
 
-    virtual std::string ToString() const override
+    std::string ToString() const override
     {
         std::ostringstream oss;
         oss << "KeyReleasedEvent: " << m_KeyCode;
