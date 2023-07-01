@@ -1,6 +1,5 @@
 # Binaries
-**/bin/
-**/bin-int/
+**/build/
 
 # Visual Studio files and folder
 .vs/
@@ -9,6 +8,3 @@
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
-
-# Dear ImGui artifacts
-imgui.ini
