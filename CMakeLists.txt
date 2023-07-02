@@ -1,27 +1,27 @@
 cmake_minimum_required(VERSION 3.26.4)
 
-MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
-	IF(MSVC)
-		GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
-		SET(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
-		SET(Sources ${${SourcesVar}})
+macro(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+	if(MSVC)
+		get_filename_component(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
+		set(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
+		set(Sources ${${SourcesVar}})
 
-		SET_SOURCE_FILES_PROPERTIES(
+		set_source_files_properties(
 			${PrecompiledSource}	PROPERTIES
 			COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
 			OBJECT_OUTPUTS "${PrecompiledBinary}"
 		)
 		
-		SET_SOURCE_FILES_PROPERTIES(
+		set_source_files_properties(
 			${Sources} PROPERTIES
 			COMPILE_FLAGS "/Yu\"${PrecompiledBinary}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\""
 			OBJECT_DEPENDS "${PrecompiledBinary}"
 		)
-	ENDIF(MSVC)
+	endif(MSVC)
 	
 	# Add precompiled header to SourcesVar
-	LIST(APPEND ${SourcesVar} ${PrecompiledSource})
-ENDMACRO()
+	list(APPEND ${SourcesVar} ${PrecompiledSource})
+endmacro()
 
 project(BlackHole CXX)
 
@@ -62,7 +62,7 @@ add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/Glad)
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/glm)
-#add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/ImGui)
+add_subdirectory(vendor/ImGui)
 
 add_compile_definitions(
 	$<$<CONFIG:Debug>:BH_DEBUG>
@@ -84,3 +84,4 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
 target_link_libraries(${CMAKE_PROJECT_NAME} spdlog)
 target_link_libraries(${CMAKE_PROJECT_NAME} Glad)
 target_link_libraries(${CMAKE_PROJECT_NAME} glfw)
+target_link_libraries(${CMAKE_PROJECT_NAME} imgui)

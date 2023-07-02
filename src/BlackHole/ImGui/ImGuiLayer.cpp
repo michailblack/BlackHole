@@ -1,8 +1,8 @@
 ﻿#include "bhpch.h"
 #include "ImGuiLayer.h"
 
-//#include <backends/imgui_impl_glfw.h>
-//#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
 ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer")
@@ -11,50 +11,50 @@ ImGuiLayer::ImGuiLayer()
 
 void ImGuiLayer::OnAttach()
 {
-    //IMGUI_CHECKVERSION();
-    //ImGui::CreateContext();
-    //ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-    //
-    //ImGui::StyleColorsDark();
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    
+    ImGui::StyleColorsDark();
 
-    //ImGuiStyle& style = ImGui::GetStyle();
-    //if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    //{
-    //    style.WindowRounding = 0.0f;
-    //    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    //}
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+       style.WindowRounding = 0.0f;
+       style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
 
-    //ImGui_ImplGlfw_InitForOpenGL(&Application::Get().GetNativeWindow(), true);
-    //ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplGlfw_InitForOpenGL(&Application::Get().GetNativeWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 410");
 }
 
 void ImGuiLayer::OnDetach()
 {
-    /*ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();*/
+    ImGui::DestroyContext();
 }
 
 void ImGuiLayer::OnImGuiRender()
 {
     static bool showDemoWindow = true;
-    //ImGui::ShowDemoWindow(&showDemoWindow);
+    ImGui::ShowDemoWindow(&showDemoWindow);
 }
 
 void ImGuiLayer::Begin()
 {
-    /*ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();*/
+    ImGui::NewFrame();
 }
 
 void ImGuiLayer::End()
 {
-    /*ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
     const Application& app = Application::Get();
     io.DisplaySize = ImVec2(static_cast<float>(app.GetWindow().GetWidth()), static_cast<float>(app.GetWindow().GetHeight()));
 
@@ -67,5 +67,5 @@ void ImGuiLayer::End()
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
-    }*/
+    }
 }
