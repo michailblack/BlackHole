@@ -4,6 +4,8 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include <GLFW/glfw3.h>
+
 ImGuiLayer::ImGuiLayer()
     : Layer("ImGuiLayer")
 {
@@ -29,7 +31,7 @@ void ImGuiLayer::OnAttach()
     }
 
     ImGui_ImplGlfw_InitForOpenGL(&Application::Get().GetNativeWindow(), true);
-    ImGui_ImplOpenGL3_Init("#version 410");
+    ImGui_ImplOpenGL3_Init("#version 460 core");
 }
 
 void ImGuiLayer::OnDetach()

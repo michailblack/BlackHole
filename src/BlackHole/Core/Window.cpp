@@ -5,7 +5,7 @@
 #include "BlackHole/Events/KeyEvent.h"
 #include "BlackHole/Events/MouseEvent.h"
 
-#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 static bool gs_GLFWInitialized = false;
 
@@ -27,7 +27,7 @@ Window::~Window()
 void Window::OnUpdate()
 {
     glfwPollEvents();
-    glfwSwapBuffers(m_Window);
+    m_Context->SwapBuffers();
 }
 
 void Window::SetVSync(bool enabled)
@@ -57,9 +57,10 @@ void Window::Init(const WindowProps& props)
     }
 
     m_Window = glfwCreateWindow(static_cast<int>(props.width), static_cast<int>(props.height), props.title.c_str(), nullptr, nullptr);
-    glfwMakeContextCurrent(m_Window);
-    int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    BH_ASSERT(status, "Failed to initialize Glad!");
+
+    m_Context = std::make_unique<OpenGLContext>(m_Window);
+    m_Context->Init();
+
     glfwSetWindowUserPointer(m_Window, &m_Data);
     SetVSync(true);
 

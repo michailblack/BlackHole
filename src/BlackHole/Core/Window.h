@@ -3,8 +3,7 @@
 #include <string>
 
 #include "BlackHole/Events/Event.h"
-
-#include <GLFW/glfw3.h>
+#include "BlackHole/Renderer/OpenGLContext.h"
 
 struct WindowProps
 {
@@ -40,6 +39,7 @@ private:
     void ShutDown();
 private:
     GLFWwindow* m_Window;
+    std::unique_ptr<OpenGLContext> m_Context;
 
     struct WindowData
     {

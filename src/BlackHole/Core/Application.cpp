@@ -7,10 +7,64 @@
 
 Application* Application::s_Instance = nullptr;
 
-Application::Application()
+Application::Application(const WindowProps& props)
 {
-    m_Window = std::make_unique<Window>();
+    m_Window = std::make_unique<Window>(props);
     m_Window->SetCallbackFunction(BH_BIND_EVENT_FN(OnEvent));
+
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,  0.8f, 0.2f, 0.8f, 1.0f,
+         0.5f, -0.5f, 0.0f,  0.2f, 0.3f, 0.8f, 1.0f,
+         0.0f,  0.5f, 0.0f,  0.8f, 0.8f, 0.2f, 1.0f
+    };
+
+    uint32_t indices[] = {
+        0, 1, 2
+    };
+
+    m_VertexArray = std::make_unique<VertexArray>();
+    m_VertexBuffer = std::make_unique<VertexBuffer>(vertices, sizeof(vertices));
+    m_IndexBuffer = std::make_unique<IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
+
+    {
+        const BufferLayout layout = {
+            { ShaderDataType::Float3, "a_Position" },
+            { ShaderDataType::Float4, "a_Color" }
+        };
+
+        m_VertexBuffer->SetLayout(layout);
+    }
+
+    m_VertexArray->AddVertexBuffer(m_VertexBuffer);
+    m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+
+    std::string vertexSrc = R"(
+        #version 330 core
+        layout (location = 0) in vec3 a_Position;
+        layout (location = 1) in vec4 a_Color;
+        
+        out vec4 v_Color;
+
+        void main()
+        {
+            v_Color = a_Color;
+            gl_Position = vec4(a_Position, 1.0);
+        }
+    )";
+
+    std::string fragmentSrc = R"(
+        #version 330 core
+        layout (location = 0) out vec4 FragColor;        
+
+        in vec4 v_Color;
+
+        void main()
+        {
+            FragColor = v_Color;
+        }
+    )";
+
+    m_Shader = std::make_unique<Shader>(vertexSrc, fragmentSrc);
 }
 
 Application::~Application()
@@ -20,10 +74,9 @@ Application::~Application()
     delete s_Instance;
 }
 
-void Application::Init()
+void Application::Init(const WindowProps& props)
 {
-    if (!s_Instance)
-        s_Instance = new Application();
+    s_Instance = new Application(props);
 
     s_Instance->PushOverlay(new ImGuiLayer());
 }
@@ -32,8 +85,12 @@ void Application::Run()
 {
     while (m_IsRunning)
     {
-        glClearColor(1, 0, 1, 1);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        m_Shader->Bind();
+        m_VertexArray->Bind();
+        glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
 
         for (Layer* layer : m_LayerStack)
             layer->OnUpdate();

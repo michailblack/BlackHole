@@ -1,4 +1,5 @@
 #pragma once
+#include "BlackHole/Core/Log.h"
 
 #ifdef BH_ENABLE_ASSERTS
     #define BH_ASSERT(x, ...) { if(!(x)) { BH_LOG_CRITICAL("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }

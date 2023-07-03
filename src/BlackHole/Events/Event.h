@@ -48,7 +48,7 @@ public:
 };
 
 template<typename OStream>
-OStream &operator<<(OStream &os, const Event& e)
+OStream& operator<<(OStream& os, const Event& e)
 {
     fmt::format_to(std::ostream_iterator<char>(os), "{0}", e.ToString());
     return os;

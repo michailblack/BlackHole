@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -16,7 +17,3 @@
 #include "BlackHole/Core/Core.h"
 #include "BlackHole/Core/Layer.h"
 #include "BlackHole/Core/Log.h"
-
-#ifdef BH_PLATFORM_WINDOWS
-    #include <Windows.h>
-#endif
