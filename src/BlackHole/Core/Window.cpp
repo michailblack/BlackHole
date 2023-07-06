@@ -1,4 +1,3 @@
-#include "bhpch.h"
 #include "Window.h"
 
 #include "BlackHole/Events/ApplicationEvent.h"

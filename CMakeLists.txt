@@ -24,7 +24,6 @@ add_compile_definitions(
 	GLFW_INCLUDE_NONE)
 
 add_executable(${CMAKE_PROJECT_NAME}
-	src/BlackHoleApp.cpp
 	${BH_SRC}
 )
 

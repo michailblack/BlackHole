@@ -30,16 +30,16 @@ static uint32_t GetShaderDataTypeSize(ShaderDataType type)
 
 struct BufferElement
 {
-    std::string name;
-    uint32_t size;
-    uint32_t offset;
-    ShaderDataType type;
-    bool isNormalized;
+    std::string Name;
+    uint32_t Size;
+    uint32_t Offset;
+    ShaderDataType Type;
+    bool IsNormalized;
 
-    BufferElement(ShaderDataType t_type, const std::string& t_name, bool t_isNormalized = false)
-        : name(t_name), size(0), offset(0), type(t_type), isNormalized(t_isNormalized)
+    BufferElement(ShaderDataType type, const std::string& name, bool isNormalized = false)
+        : Name(name), Size(0), Offset(0), Type(type), IsNormalized(isNormalized)
     {
-        size = GetShaderDataTypeSize(type);
+        Size = GetShaderDataTypeSize(Type);
     }
 };
 
@@ -67,9 +67,9 @@ private:
         m_Stride = 0;
         for (auto& element : m_Elements)
         {
-            element.offset = offset;
-            offset += element.size;
-            m_Stride += element.size;
+            element.Offset = offset;
+            offset += element.Size;
+            m_Stride += element.Size;
         }
     }
 
@@ -84,7 +84,7 @@ public:
     ~VertexBuffer();
 
     void Bind() const;
-    void Unbind() const;
+    static void Unbind();
 
     const BufferLayout& GetLayout() const { return m_Layout; }
     void SetLayout(const BufferLayout& layout) { m_Layout = layout; }
@@ -100,7 +100,7 @@ public:
     ~IndexBuffer();
 
     void Bind() const;
-    void Unbind() const;
+    static void Unbind();
 
     uint32_t GetCount() const { return m_Count; }
 private:
@@ -115,12 +115,15 @@ public:
     ~VertexArray();
 
     void Bind() const;
-    void Unbind() const;
+    static void Unbind();
 
-    void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer);
-    void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
+    void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer);
+    void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
+
+    std::vector<Ref<VertexBuffer>> GetVertexBuffers() { return m_VertexBuffers; }
+    Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
 private:
     uint32_t m_RendererID;
-    std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers;
-    std::shared_ptr<IndexBuffer> m_IndexBuffer;
+    std::vector<Ref<VertexBuffer>> m_VertexBuffers;
+    Ref<IndexBuffer> m_IndexBuffer;
 };

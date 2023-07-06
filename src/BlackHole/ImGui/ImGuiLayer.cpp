@@ -1,5 +1,4 @@
-﻿#include "bhpch.h"
-#include "ImGuiLayer.h"
+﻿#include "ImGuiLayer.h"
 
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -30,7 +29,7 @@ void ImGuiLayer::OnAttach()
        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
-    ImGui_ImplGlfw_InitForOpenGL(&Application::Get().GetNativeWindow(), true);
+    ImGui_ImplGlfw_InitForOpenGL(Application::Get().GetNativeWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 460 core");
 }
 
@@ -43,8 +42,6 @@ void ImGuiLayer::OnDetach()
 
 void ImGuiLayer::OnImGuiRender()
 {
-    static bool showDemoWindow = true;
-    ImGui::ShowDemoWindow(&showDemoWindow);
 }
 
 void ImGuiLayer::Begin()

@@ -1,4 +1,3 @@
-#include "bhpch.h"
 #include "LayerStack.h"
 
 LayerStack::LayerStack()

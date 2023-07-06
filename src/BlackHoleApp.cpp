@@ -1,4 +1,3 @@
-#include "bhpch.h"
 
 int main()
 {

@@ -1,9 +1,8 @@
-#include "bhpch.h"
 #include "Buffer.h"
 
 #include <glad/glad.h>
 
-static GLint GetComponentCount(ShaderDataType type)
+static GLint GetComponentCount(const ShaderDataType type)
 {
     switch (type)
     {
@@ -22,7 +21,7 @@ static GLint GetComponentCount(ShaderDataType type)
     }
 }
 
-static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+static GLenum ShaderDataTypeToOpenGLBaseType(const ShaderDataType type)
 {
     switch (type)
     {
@@ -61,7 +60,7 @@ void VertexBuffer::Bind() const
     glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 }
 
-void VertexBuffer::Unbind() const
+void VertexBuffer::Unbind()
 {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -86,7 +85,7 @@ void IndexBuffer::Bind() const
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 }
 
-void IndexBuffer::Unbind() const
+void IndexBuffer::Unbind()
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
@@ -108,12 +107,12 @@ void VertexArray::Bind() const
     glBindVertexArray(m_RendererID);
 }
 
-void VertexArray::Unbind() const
+void VertexArray::Unbind()
 {
     glBindVertexArray(0);
 }
 
-void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+void VertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 {
     BH_ASSERT(!vertexBuffer->GetLayout().GetElements().empty(), "Vertex Buffer has no layout!");
 
@@ -126,11 +125,11 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
     {
         glEnableVertexAttribArray(index);
         glVertexAttribPointer(index,
-            GetComponentCount(element.type),
-            ShaderDataTypeToOpenGLBaseType(element.type),
-            element.isNormalized ? GL_TRUE : GL_FALSE,
+            GetComponentCount(element.Type),
+            ShaderDataTypeToOpenGLBaseType(element.Type),
+            element.IsNormalized ? GL_TRUE : GL_FALSE,
             layout.GetStride(),
-            reinterpret_cast<const void*>(element.offset)
+            reinterpret_cast<const void*>(element.Offset)
         );
         ++index;
     }
@@ -138,7 +137,7 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuf
     m_VertexBuffers.push_back(vertexBuffer);
 }
 
-void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
+void VertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 {
     glBindVertexArray(m_RendererID);
     indexBuffer->Bind();
