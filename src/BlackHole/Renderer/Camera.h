@@ -11,29 +11,25 @@ class Camera
 public:
     Camera()
         : m_ViewMatrix(1.0f)
-        , m_Position(0.0f, 0.0f, 0.0f)
-        , m_Direction(0.0f, 0.0f, -1.0f)
-        , m_Right(1.0f, 0.0f, 0.0f)
-        , m_Up(0.0f, 1.0f, 0.0f)
-        , m_QuatX(0.0f, 0.0f, 0.0f, 1.0f)
-        , m_QuatY(0.0f, 0.0f, 0.0f, 1.0f)
+        , m_Position(0.0f, 0.0f, 3.0f)
+        , m_Target(0, 0, -1)
+        , m_Up(0, 1, 0)
+        , m_Right(1, 0, 0)
+        , m_Orientation(1, 0, 0, 0)
     {
     }
 
     virtual ~Camera() = default;
 
     void SetCameraPosition(glm::vec3 position) { m_Position = position; RecalculateMatrices(); }
-    void SetCameraRotation(float offsetX, float offsetY);
 
     glm::mat4 GetViewMatrix() const { return m_ViewMatrix; }
     glm::mat4 GetProjectionMatrix() const { return m_ProjectionMatrix; }
     glm::mat4 GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
 
     glm::vec3 GetCameraPosition() const { return m_Position; }
-    glm::quat GetCameraQuatX() const { return m_QuatX; }
-    glm::quat GetCameraQuatY() const { return m_QuatY; }
 
-    glm::vec3 GetDirection() const { return m_Direction; }
+    glm::vec3 GetTargetDirection() const { return m_Target; }
     glm::vec3 GetUpDirection() const { return m_Up; }
     glm::vec3 GetRightDirection() const { return m_Right; }
 
@@ -45,12 +41,11 @@ protected:
     glm::mat4 m_ViewProjectionMatrix;
 
     glm::vec3 m_Position;
-    glm::vec3 m_Direction;
-    glm::vec3 m_Right;
+    glm::vec3 m_Target;
     glm::vec3 m_Up;
+    glm::vec3 m_Right;
 
-    glm::quat m_QuatX;
-    glm::quat m_QuatY;
+    glm::quat m_Orientation;
 };
 
 class PerspectiveCamera : public Camera
@@ -59,6 +54,15 @@ public:
     PerspectiveCamera(float fov, float aspectRatio, float near, float far);
     ~PerspectiveCamera() final = default;
 
+    void SetCameraRotation(float offsetX, float offsetY);
+
+    void SetProjectionParameters(float fov, float aspectRatio, float near, float far);
+    void SetAspectRatio(float aspectRatio);
 private:
     void RecalculateMatrices() final;
+private:
+    float m_FOV;
+    float m_AspectRatio;
+    float m_Near;
+    float m_Far;
 };

@@ -18,9 +18,10 @@ protected:
 
     glm::vec3 m_CameraPosition;
     float m_CameraTranslateSpeed = 5.0f;
-    float m_CameraRotateSpeed = 10.0f;
+    float m_CameraRotateSpeed = 7.0f;
     float m_OffsetX;
     float m_OffsetY;
+    float m_OverallOffsetY = 0.0f;
     bool m_CameraWasRotated = false;
 };
 
@@ -38,4 +39,5 @@ private:
     bool OnMouseMovedEvent(MouseMovedEvent& e);
     bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
     bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
+    bool OnWindowResizeEvent(WindowResizeEvent& e);
 };
