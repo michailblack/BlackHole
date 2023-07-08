@@ -19,6 +19,10 @@ void PerspectiveCamera::SetCameraRotation(float offsetX, float offsetY)
     m_Orientation = m_Orientation * quatYaw;
     m_Orientation = quatPitch * m_Orientation;
 
+    const float currentPitch = 2.0f * glm::acos(m_Orientation.w);
+    if (currentPitch > glm::radians(89.0f) || currentPitch < glm::radians(-89.0f))
+        m_Orientation = glm::conjugate(quatPitch) * m_Orientation;
+
     const glm::quat invOrientation = glm::conjugate(m_Orientation);
     m_Target = glm::normalize(invOrientation * glm::vec3(0, 0, -1));
     m_Up = glm::normalize(invOrientation * glm::vec3(0, 1, 0));

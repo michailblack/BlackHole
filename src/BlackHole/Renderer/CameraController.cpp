@@ -4,8 +4,6 @@
 
 void PerspectiveCameraController::OnUpdate(Timestep ts)
 {
-    /// TODO
-    /// -Fix mouse position reaction on borders artifact
     if (Input::IsKeyPressed(GLFW_KEY_W))
     {
         m_CameraPosition += m_Camera->GetTargetDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
@@ -44,7 +42,7 @@ void PerspectiveCameraController::OnUpdate(Timestep ts)
 
     if (m_CameraWasRotated)
     {
-        static_cast<PerspectiveCamera*>(m_Camera)->SetCameraRotation(m_OffsetX * m_CameraRotateSpeed * ts, m_OffsetY * m_CameraRotateSpeed * ts);
+        static_cast<PerspectiveCamera*>(m_Camera)->SetCameraRotation(m_Yaw * ts, m_Pitch * ts);
         m_CameraWasRotated = false;
     }
 }
@@ -60,30 +58,26 @@ void PerspectiveCameraController::OnEvent(Event& e)
 
 bool PerspectiveCameraController::OnMouseMovedEvent(MouseMovedEvent& e)
 {
-    const auto& window = Application::Get().GetWindow();
     if (Input::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
     {
-        const glm::vec2 centerPos = { static_cast<float>(window.GetWidth()) / 2.0f, static_cast<float>(window.GetHeight()) / 2.0f };
-        const float offsetX = e.GetX() - centerPos.x;
-        const float offsetY = e.GetY() - centerPos.y;
+        if (m_FirstMouseMoveEvent)
+        {
+            m_LastMouseX = e.GetX();
+            m_LastMouseY = e.GetY();
+            m_FirstMouseMoveEvent = false;
+        }
+        const float offsetX = e.GetX() - m_LastMouseX;
+        const float offsetY = e.GetY() - m_LastMouseY;
+        m_LastMouseX = e.GetX();
+        m_LastMouseY = e.GetY();
 
-        m_OverallOffsetY += glm::radians(offsetY * m_CameraRotateSpeed);
-        if (m_OverallOffsetY >= 89.0f || m_OverallOffsetY <= -89.0f)
-        {
-            m_OverallOffsetY -= glm::radians(offsetY * m_CameraRotateSpeed);
-            m_OffsetY = 0.0f;
-        }
-        else
-        {
-            m_OffsetY = offsetY;
-        }
-        m_OffsetX = offsetX;
+        m_Yaw = offsetX * m_CameraRotateSpeed;
+        m_Pitch = offsetY * m_CameraRotateSpeed;
 
         m_CameraWasRotated = true;
-
-        glfwSetCursorPos(window.GetWindowGLFW(), centerPos.x, centerPos.y);
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool PerspectiveCameraController::OnMouseButtonPressedEvent(MouseButtonPressedEvent& e)
@@ -91,10 +85,10 @@ bool PerspectiveCameraController::OnMouseButtonPressedEvent(MouseButtonPressedEv
     const auto& window = Application::Get().GetWindow();
     if (e.GetMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
     {
-        glfwSetCursorPos(window.GetWindowGLFW(), static_cast<double>(window.GetWidth()) / 2.0, static_cast<double>(window.GetHeight()) / 2.0);
         glfwSetInputMode(window.GetWindowGLFW(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool PerspectiveCameraController::OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e)
@@ -103,8 +97,10 @@ bool PerspectiveCameraController::OnMouseButtonReleasedEvent(MouseButtonReleased
     if (e.GetMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
     {
         glfwSetInputMode(window.GetWindowGLFW(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        m_FirstMouseMoveEvent = true;
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool PerspectiveCameraController::OnWindowResizeEvent(WindowResizeEvent& e)

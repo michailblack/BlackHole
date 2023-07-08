@@ -137,6 +137,6 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
-    Renderer::SetViewport(0, 0, static_cast<int>(e.GetWidth()), static_cast<int>(e.GetHeight()));
+    Renderer::SetViewport(0, 0, e.GetWidth(), e.GetHeight());
     return true;
 }

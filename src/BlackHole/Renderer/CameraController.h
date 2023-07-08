@@ -18,11 +18,13 @@ protected:
 
     glm::vec3 m_CameraPosition;
     float m_CameraTranslateSpeed = 5.0f;
-    float m_CameraRotateSpeed = 7.0f;
-    float m_OffsetX;
-    float m_OffsetY;
-    float m_OverallOffsetY = 0.0f;
+    float m_CameraRotateSpeed = 5.0f;
+    float m_Yaw;
+    float m_Pitch;
+    float m_LastMouseX;
+    float m_LastMouseY;
     bool m_CameraWasRotated = false;
+    bool m_FirstMouseMoveEvent = true;
 };
 
 class PerspectiveCameraController : public CameraController
