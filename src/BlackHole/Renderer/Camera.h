@@ -56,7 +56,7 @@ public:
 
     void SetCameraRotation(float offsetX, float offsetY);
 
-    void SetProjectionParameters(float fov, float aspectRatio, float near, float far);
+    void SetPerspectiveParameters(float fov, float aspectRatio, float near, float far);
     void SetAspectRatio(float aspectRatio);
 private:
     void RecalculateMatrices() final;
@@ -65,4 +65,6 @@ private:
     float m_AspectRatio;
     float m_Near;
     float m_Far;
+
+    glm::quat m_QuatPitch;
 };
