@@ -12,7 +12,11 @@ public:
     void Bind() const;
     static void Unbind();
 
-    void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+    void UploadInt(const std::string& name, int value) const;
+    void UploadFloat(const std::string& name, float value) const;
+    void UploadFloat3(const std::string& name, const glm::vec3& vector) const;
+    void UploadMat4(const std::string& name, const glm::mat4& matrix) const;
+
 private:
     static std::string ReadFile(const std::string& filepath);
     static GLenum ShaderTypeFromStringKeyword(const std::string& keyword);

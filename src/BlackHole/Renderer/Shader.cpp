@@ -33,9 +33,32 @@ void Shader::Unbind()
     glUseProgram(0);
 }
 
-void Shader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+void Shader::UploadInt(const std::string& name, int value) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(m_RendererID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
+    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+    BH_ASSERT(location != -1, "Uniform doesn't exist!");
+    glUniform1i(location, value);
+}
+
+void Shader::UploadFloat(const std::string& name, float value) const
+{
+    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+    BH_ASSERT(location != -1, "Uniform doesn't exist!");
+    glUniform1f(location, value);
+}
+
+void Shader::UploadFloat3(const std::string& name, const glm::vec3& vector) const
+{
+    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+    BH_ASSERT(location != -1, "Uniform doesn't exist!");
+    glUniform3f(location, vector.x, vector.y, vector.z);
+}
+
+void Shader::UploadMat4(const std::string& name, const glm::mat4& matrix) const
+{
+    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+    BH_ASSERT(location != -1, "Uniform doesn't exist!");
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 std::string Shader::ReadFile(const std::string& filepath)

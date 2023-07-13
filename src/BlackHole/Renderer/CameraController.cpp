@@ -4,39 +4,45 @@
 
 void PerspectiveCameraController::OnUpdate(Timestep ts)
 {
+    float cameraTranslateSpeed = m_CameraTranslateSpeed;
+    if (Input::IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
+    {
+        cameraTranslateSpeed /= 4.0f;
+    }
+
     if (Input::IsKeyPressed(GLFW_KEY_W))
     {
-        m_CameraPosition += m_Camera->GetTargetDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition += m_Camera->GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_S))
     {
-        m_CameraPosition -= m_Camera->GetTargetDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition -= m_Camera->GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_A))
     {
-        m_CameraPosition -= m_Camera->GetRightDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition -= m_Camera->GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_D))
     {
-        m_CameraPosition += m_Camera->GetRightDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition += m_Camera->GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_SPACE))
     {
-        m_CameraPosition += m_Camera->GetUpDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition += m_Camera->GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
     {
-        m_CameraPosition -= m_Camera->GetUpDirection() * glm::vec3(m_CameraTranslateSpeed * ts);
+        m_CameraPosition -= m_Camera->GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
         m_Camera->SetCameraPosition(m_CameraPosition);
     }
 
@@ -53,6 +59,7 @@ void PerspectiveCameraController::OnEvent(Event& e)
     dispatcher.Dispatch<MouseButtonPressedEvent>(BH_BIND_EVENT_FN(OnMouseButtonPressedEvent));
     dispatcher.Dispatch<MouseMovedEvent>(BH_BIND_EVENT_FN(OnMouseMovedEvent));
     dispatcher.Dispatch<MouseButtonReleasedEvent>(BH_BIND_EVENT_FN(OnMouseButtonReleasedEvent));
+    dispatcher.Dispatch<MouseScrolledEvent>(BH_BIND_EVENT_FN(OnMouseScrolled));
     dispatcher.Dispatch<WindowResizeEvent>(BH_BIND_EVENT_FN(OnWindowResizeEvent));
 }
 
@@ -106,5 +113,24 @@ bool PerspectiveCameraController::OnMouseButtonReleasedEvent(MouseButtonReleased
 bool PerspectiveCameraController::OnWindowResizeEvent(WindowResizeEvent& e)
 {
     static_cast<PerspectiveCamera*>(m_Camera)->SetAspectRatio(static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight()));
+    return true;
+}
+
+bool PerspectiveCameraController::OnMouseScrolled(MouseScrolledEvent& e)
+{
+    m_FOV -= e.GetYOffset();
+
+    if (m_FOV < 1.0f)
+    {
+        m_FOV = 1.0f;
+    }
+
+    if (m_FOV > 45.0f)
+    {
+        m_FOV = 45.0f;
+    }
+
+    static_cast<PerspectiveCamera*>(m_Camera)->SetFOV(m_FOV);
+
     return true;
 }

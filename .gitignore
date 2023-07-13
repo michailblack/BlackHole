@@ -2,6 +2,9 @@
 /build*/
 /out*/
 
+## Model folder
+assets/models/
+
 ## Dear ImGui artifacts
 imgui.ini
 

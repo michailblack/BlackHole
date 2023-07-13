@@ -42,12 +42,13 @@ static GLenum ShaderDataTypeToOpenGLBaseType(const ShaderDataType type)
 
 // Vertex Buffer
 
-VertexBuffer::VertexBuffer(const float* vertices, uint32_t size)
+VertexBuffer::VertexBuffer(const float* vertices, int64_t size)
     : m_Layout({})
 {
     glCreateBuffers(1, &m_RendererID);
     glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 VertexBuffer::~VertexBuffer()
@@ -73,6 +74,7 @@ IndexBuffer::IndexBuffer(const uint32_t* indices, uint32_t count)
     glCreateBuffers(1, &m_RendererID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 IndexBuffer::~IndexBuffer()
@@ -119,7 +121,6 @@ void VertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
     glBindVertexArray(m_RendererID);
     vertexBuffer->Bind();
     const auto& layout = vertexBuffer->GetLayout();
-
     uint32_t index = 0;
     for (const auto& element : layout)
     {
@@ -135,6 +136,9 @@ void VertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
     }
 
     m_VertexBuffers.push_back(vertexBuffer);
+
+    glBindVertexArray(0);
+    VertexBuffer::Unbind();
 }
 
 void VertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
@@ -142,4 +146,6 @@ void VertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
     glBindVertexArray(m_RendererID);
     indexBuffer->Bind();
     m_IndexBuffer = indexBuffer;
+    glBindVertexArray(0);
+    IndexBuffer::Unbind();
 }

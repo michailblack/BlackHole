@@ -51,16 +51,20 @@ protected:
 class PerspectiveCamera : public Camera
 {
 public:
-    PerspectiveCamera(float fov, float aspectRatio, float near, float far);
+    PerspectiveCamera(float fovDegrees, float aspectRatio, float near, float far);
     ~PerspectiveCamera() final = default;
 
     void SetCameraRotation(float offsetX, float offsetY);
 
-    void SetPerspectiveParameters(float fov, float aspectRatio, float near, float far);
+    void SetPerspectiveParameters(float fovDegrees, float aspectRatio, float near, float far);
     void SetAspectRatio(float aspectRatio);
+    void SetFOV(float fov);
+    float GetFOV() const { return m_FOV; }
+
 private:
     void RecalculateMatrices() final;
 private:
+    // In degrees
     float m_FOV;
     float m_AspectRatio;
     float m_Near;

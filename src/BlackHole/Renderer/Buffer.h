@@ -31,13 +31,13 @@ static uint32_t GetShaderDataTypeSize(ShaderDataType type)
 struct BufferElement
 {
     std::string Name;
+    uint64_t Offset;
     uint32_t Size;
-    uint32_t Offset;
     ShaderDataType Type;
     bool IsNormalized;
 
     BufferElement(ShaderDataType type, const std::string& name, bool isNormalized = false)
-        : Name(name), Size(0), Offset(0), Type(type), IsNormalized(isNormalized)
+        : Name(name), Offset(0), Size(0), Type(type), IsNormalized(isNormalized)
     {
         Size = GetShaderDataTypeSize(Type);
     }
@@ -80,7 +80,7 @@ private:
 class VertexBuffer
 {
 public:
-    explicit VertexBuffer(const float* vertices, uint32_t size);
+    explicit VertexBuffer(const float* vertices, int64_t size);
     ~VertexBuffer();
 
     void Bind() const;

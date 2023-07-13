@@ -41,11 +41,12 @@ void Window::SetVSync(bool enabled)
 
 void Window::Init(const WindowProps& props)
 {
-    m_Data.title = props.title;
-    m_Data.width = props.width;
-    m_Data.height = props.height;
+    m_Data.Title = props.Title;
+    m_Data.Width = props.Width;
+    m_Data.Height = props.Height;
+    m_Data.IsFullscreen = false;
 
-    BH_LOG_INFO("Creating window {0} ({1}, {2})", props.title, props.width, props.height);
+    BH_LOG_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
     if (!gs_GLFWInitialized)
     {
@@ -55,7 +56,7 @@ void Window::Init(const WindowProps& props)
         gs_GLFWInitialized = true;
     }
 
-    m_Window = glfwCreateWindow(static_cast<int>(props.width), static_cast<int>(props.height), props.title.c_str(), nullptr, nullptr);
+    m_Window = glfwCreateWindow(static_cast<int>(props.Width), static_cast<int>(props.Height), props.Title.c_str(), nullptr, nullptr);
 
     m_Context = std::make_unique<OpenGLContext>(m_Window);
     m_Context->Init();
@@ -68,8 +69,8 @@ void Window::Init(const WindowProps& props)
         {
             auto* data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             
-            data->width = width;
-            data->height = height;
+            data->Width = width;
+            data->Height = height;
 
             WindowResizeEvent e(width, height);
             data->EventCallback(e);

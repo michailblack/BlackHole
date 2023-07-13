@@ -16,6 +16,8 @@ add_subdirectory(vendor/Glad)
 add_subdirectory(vendor/GLFW)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui)
+add_subdirectory(vendor/assimp)
+add_subdirectory(vendor/stb_image)
 
 add_compile_definitions(
 	$<$<CONFIG:Debug>:BH_DEBUG>
@@ -33,11 +35,15 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
     vendor/Glad/include
     vendor/GLFW/include
 	vendor/glm
+    vendor/assimp/include
+    vendor/stb_image
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME} spdlog)
 target_link_libraries(${CMAKE_PROJECT_NAME} Glad)
 target_link_libraries(${CMAKE_PROJECT_NAME} glfw)
 target_link_libraries(${CMAKE_PROJECT_NAME} imgui)
+target_link_libraries(${CMAKE_PROJECT_NAME} assimp)
+target_link_libraries(${CMAKE_PROJECT_NAME} stb_image)
 
 target_precompile_headers(${CMAKE_PROJECT_NAME} PRIVATE src/bhpch.h)

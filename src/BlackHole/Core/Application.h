@@ -4,12 +4,13 @@
 #include "Timer.h"
 #include "Window.h"
 
-#include "BlackHole/Events/ApplicationEvent.h"
 #include "BlackHole/Events/Event.h"
+#include "BlackHole/Events/ApplicationEvent.h"
+#include "BlackHole/Events/KeyEvent.h"
 
-#include "BlackHole/Renderer/Buffer.h"
 #include "BlackHole/Renderer/Camera.h"
 #include "BlackHole/Renderer/CameraController.h"
+#include "BlackHole/Renderer/Model.h"
 #include "BlackHole/Renderer/Shader.h"
 
 #include "BlackHole/ImGui/ImGuiLayer.h"
@@ -38,25 +39,24 @@ public:
     Window& GetWindow() const { return *m_Window; }
     GLFWwindow* GetNativeWindow() const { return m_Window->GetWindowGLFW(); }
 public:
-    Ref<VertexArray> m_VertexArray;
-    Ref<VertexBuffer> m_VertexBuffer;
-    Ref<IndexBuffer> m_IndexBuffer;
-    Ref<Shader> m_Shader;
-
+    Ref<Model> m_Model;
+    Ref<Shader> m_ModelShader;
+    Ref<Shader> m_OutlineShader;
 private:
     explicit Application(const WindowProps& props);
 
     bool OnWindowClose(WindowCloseEvent& e);
     bool OnWindowResize(WindowResizeEvent& e);
+    bool OnKeyPressed(KeyPressedEvent& e);
 private:
     static Application* s_Instance;
 
     bool m_IsRunning = true;
-    std::unique_ptr<Window> m_Window;
-    std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
+    Scope<Window> m_Window;
+    Scope<ImGuiLayer> m_ImGuiLayer;
     LayerStack m_LayerStack;
     Timer m_Timer;
-    std::unique_ptr<Camera> m_Camera;
-    std::unique_ptr<CameraController> m_CameraController;
+    Scope<Camera> m_Camera;
+    Scope<CameraController> m_CameraController;
     float m_LastFrameTime = 0.0f;
 };

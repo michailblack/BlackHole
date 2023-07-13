@@ -18,7 +18,7 @@ protected:
 
     glm::vec3 m_CameraPosition;
     float m_CameraTranslateSpeed = 5.0f;
-    float m_CameraRotateSpeed = 5.0f;
+    float m_CameraRotateSpeed = 3.0f;
     float m_Yaw;
     float m_Pitch;
     float m_LastMouseX;
@@ -31,7 +31,7 @@ class PerspectiveCameraController : public CameraController
 {
 public:
     PerspectiveCameraController(PerspectiveCamera* camera)
-        : CameraController(camera)
+        : CameraController(camera), m_FOV(camera->GetFOV())
     {
     }
     ~PerspectiveCameraController() override = default;
@@ -42,4 +42,8 @@ private:
     bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& e);
     bool OnMouseButtonReleasedEvent(MouseButtonReleasedEvent& e);
     bool OnWindowResizeEvent(WindowResizeEvent& e);
+    bool OnMouseScrolled(MouseScrolledEvent& e);
+private:
+    // In degrees
+    float m_FOV;
 };
