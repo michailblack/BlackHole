@@ -1,14 +1,14 @@
-#include "OpenGLContext.h"
+#include "Context.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-OpenGLContext::OpenGLContext(GLFWwindow* window)
+Context::Context(GLFWwindow* window)
     : m_WindowHandle(window)
 {
 }
 
-void OpenGLContext::Init()
+void Context::Init()
 {
     glfwMakeContextCurrent(m_WindowHandle);
     const int status = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
@@ -21,12 +21,17 @@ void OpenGLContext::Init()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glEnable(GL_CULL_FACE);
+
     BH_LOG_INFO("[OpenGL] Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
     BH_LOG_INFO("[OpenGL] Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
     BH_LOG_INFO("[OpenGL] Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 }
 
-void OpenGLContext::SwapBuffers()
+void Context::SwapBuffers()
 {
     glfwSwapBuffers(m_WindowHandle);
 }

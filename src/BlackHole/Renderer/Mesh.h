@@ -1,5 +1,5 @@
 #pragma once
-#include "Buffer.h"
+#include "BlackHole/OpenGL/VertexArray.h"
 
 #include <assimp/scene.h>
 

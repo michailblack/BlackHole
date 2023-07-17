@@ -8,10 +8,12 @@
 #include "BlackHole/Events/ApplicationEvent.h"
 #include "BlackHole/Events/KeyEvent.h"
 
+#include "BlackHole/OpenGL/Framebuffer.h"
+#include "BlackHole/OpenGL/Shader.h"
+
 #include "BlackHole/Renderer/Camera.h"
 #include "BlackHole/Renderer/CameraController.h"
 #include "BlackHole/Renderer/Model.h"
-#include "BlackHole/Renderer/Shader.h"
 
 #include "BlackHole/ImGui/ImGuiLayer.h"
 
@@ -39,9 +41,15 @@ public:
     Window& GetWindow() const { return *m_Window; }
     GLFWwindow* GetNativeWindow() const { return m_Window->GetWindowGLFW(); }
 public:
-    Ref<Model> m_Model;
-    Ref<Shader> m_ModelShader;
-    Ref<Shader> m_OutlineShader;
+    Ref<VertexArray>  m_WindowVAO;
+    Ref<VertexBuffer> m_WindowVBO;
+    Ref<IndexBuffer>  m_WindowIBO;
+
+    Ref<VertexArray>  m_ScreenSquadVAO;
+    Ref<VertexBuffer> m_ScreenSquadVBO;
+    Ref<IndexBuffer>  m_ScreenSquadIBO;
+
+    Ref<Model>  m_Model;
 private:
     explicit Application(const WindowProps& props);
 
@@ -53,6 +61,8 @@ private:
 
     bool m_IsRunning = true;
     Scope<Window> m_Window;
+    ShaderLibrary m_ShaderLibrary;
+    Scope<Framebuffer> m_Framebuffer;
     Scope<ImGuiLayer> m_ImGuiLayer;
     LayerStack m_LayerStack;
     Timer m_Timer;

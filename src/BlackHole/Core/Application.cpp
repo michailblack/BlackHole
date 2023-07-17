@@ -9,15 +9,70 @@ Application::Application(const WindowProps& props)
     m_Window = CreateScope<Window>(props);
     m_Window->SetCallbackFunction(BH_BIND_EVENT_FN(OnEvent));
 
+    FramebufferSpecification fbSpec;
+    fbSpec.Width = m_Window->GetWidth();
+    fbSpec.Height = m_Window->GetHeight();
+    m_Framebuffer = CreateScope<Framebuffer>(fbSpec);
+
     m_ImGuiLayer = CreateScope<ImGuiLayer>();
     m_Camera = CreateScope<PerspectiveCamera>(45.0f,
         static_cast<float>(m_Window->GetWidth()) / static_cast<float>(m_Window->GetHeight()),
         0.1f, 100.0f);
     m_CameraController = CreateScope<PerspectiveCameraController>(static_cast<PerspectiveCamera*>(m_Camera.get()));
 
-    m_ModelShader = CreateRef<Shader>("../../../assets/shaders/model.glsl");
-    m_OutlineShader = CreateRef<Shader>("../../../assets/shaders/outline.glsl");
-    m_Model = CreateRef<Model>("../../../assets/models/wheelchair_01_4k/wheelchair_01_4k.obj");
+    m_WindowVAO = CreateRef<VertexArray>();
+    float windowVertices[] = {
+        -0.5f, -0.5f, 0.0f,    0.0f,  0.0f,
+         0.5f, -0.5f, 0.0f,    1.0f,  0.0f,
+         0.5f,  0.5f, 0.0f,    1.0f,  1.0f,
+        -0.5f,  0.5f, 0.0f,    0.0f,  1.0f
+    };
+
+    uint32_t windowIndices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    m_WindowVBO = CreateRef<VertexBuffer>(windowVertices, sizeof(windowVertices));
+    m_WindowVBO->SetLayout({
+        { ShaderDataType::Float3, "a_Position"      },
+        { ShaderDataType::Float2, "a_TextureCoords" }
+    });
+
+    m_WindowIBO = CreateRef<IndexBuffer>(windowIndices, sizeof(windowIndices) / sizeof(uint32_t));
+
+    m_WindowVAO->AddVertexBuffer(m_WindowVBO);
+    m_WindowVAO->SetIndexBuffer(m_WindowIBO);
+
+    m_ScreenSquadVAO = CreateRef<VertexArray>();
+    float screenSquadVertices[] = {
+        -1.0f, -1.0f,    0.0f, 0.0f,
+         1.0f, -1.0f,    1.0f, 0.0f,
+         1.0f,  1.0f,    1.0f, 1.0f,
+        -1.0f,  1.0f,    0.0f, 1.0f,
+    };
+
+    uint32_t screenSquadIndices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    m_ScreenSquadVBO = CreateRef<VertexBuffer>(screenSquadVertices, sizeof(screenSquadVertices));
+    m_ScreenSquadVBO->SetLayout({
+        { ShaderDataType::Float2, "a_Position"      },
+        { ShaderDataType::Float2, "a_TextureCoords" }
+    });
+
+    m_ScreenSquadIBO = CreateRef<IndexBuffer>(screenSquadIndices, sizeof(screenSquadIndices) / sizeof(uint32_t));
+
+    m_ScreenSquadVAO->AddVertexBuffer(m_ScreenSquadVBO);
+    m_ScreenSquadVAO->SetIndexBuffer(m_ScreenSquadIBO);
+
+    m_ShaderLibrary.Load("../../../assets/shaders/transparentCheck.glsl");
+    m_ShaderLibrary.Load("../../../assets/shaders/screenSquad.glsl");
+    m_ShaderLibrary.Load("../../../assets/shaders/model.glsl");
+
+    m_Model = CreateRef<Model>("../../../assets/models/BarberShopChair_01_8k/BarberShopChair_01_8k.fbx");
 }
 
 Application::~Application()
@@ -44,17 +99,25 @@ void Application::Run()
 
         m_CameraController->OnUpdate(ts);
 
-        /// Temporary for outline testing
+        m_Framebuffer->Bind();
         glEnable(GL_DEPTH_TEST);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
         Renderer::SetClearColor({0.2f, 0.2f, 0.2f, 1.0f});
         Renderer::Clear();
 
         Renderer::BeginScene(m_Camera);
-        Renderer::Submit(m_ModelShader, m_OutlineShader, m_Model);
+        Renderer::Submit(m_ShaderLibrary.Get("model"), m_Model);
+        Renderer::Submit(m_ShaderLibrary.Get("transparentCheck"), m_WindowVAO);
         Renderer::EndScene();
+
+        // Temporary for testing Framebuffer class
+        Framebuffer::Unbind();
+        Renderer::SetClearColor(glm::vec4(1.0f));
+        Renderer::Clear();
+        m_ShaderLibrary.Get("screenSquad")->Bind();
+        m_ScreenSquadVAO->Bind();
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, m_Framebuffer->GetColorAttachmentRendererID());
+        glDrawElements(GL_TRIANGLES, m_ScreenSquadVAO->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
         for (Layer* layer : m_LayerStack)
             layer->OnUpdate(ts);
@@ -106,6 +169,7 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
     Renderer::SetViewport(0, 0, e.GetWidth(), e.GetHeight());
+    m_Framebuffer->Resize(m_Window->GetWidth(), m_Window->GetHeight());
     return true;
 }
 

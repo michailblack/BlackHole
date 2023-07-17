@@ -2,10 +2,10 @@
 
 struct GLFWwindow;
 
-class OpenGLContext
+class Context
 {
 public:
-    OpenGLContext(GLFWwindow* window);
+    Context(GLFWwindow* window);
 
     void Init();
     void SwapBuffers();

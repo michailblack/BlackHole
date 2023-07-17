@@ -8,9 +8,18 @@ Shader::Shader(const std::string& filepath)
     ProcessShaderFile(shaderFileSrc);
 
     CreateProgram();
+
+    // ass/bb
+    auto lastSlashPos = filepath.find_last_of("/\\");
+    lastSlashPos = lastSlashPos == std::string::npos ? 0 : lastSlashPos + 1;
+    const auto lastDotPos = filepath.rfind('.');
+    const auto count = (lastDotPos == std::string::npos || lastDotPos < lastSlashPos) ?
+        filepath.size() - lastSlashPos : lastDotPos - lastSlashPos;
+    m_Name = filepath.substr(lastSlashPos, count);
 }
 
-Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc)
+Shader::Shader(std::string name, const std::string& vertexSrc, const std::string& fragmentSrc)
+    : m_Name(std::move(name))
 {
     m_ShaderSourceCode[GL_VERTEX_SHADER] = vertexSrc;
     m_ShaderSourceCode[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -211,4 +220,36 @@ void Shader::CreateProgram()
         glDetachShader(program, shaderID);
 
     m_RendererID = program;
+}
+
+void ShaderLibrary::Add(const Ref<Shader>& shader)
+{
+    const auto& name = shader->GetName();
+    BH_ASSERT(!Exists(name), "Shader already exists!");
+    m_Shaders[name] = shader;
+}
+
+Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+{
+    const auto& shader = CreateRef<Shader>(filepath);
+    Add(shader);
+    return shader;
+}
+
+Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+{
+    const auto& shader = CreateRef<Shader>(name, vertexSrc, fragmentSrc);
+    Add(shader);
+    return shader;
+}
+
+Ref<Shader> ShaderLibrary::Get(const std::string& name) const
+{
+    BH_ASSERT(Exists(name), "Shader not found!");
+    return m_Shaders.at(name);
+}
+
+bool ShaderLibrary::Exists(const std::string& name) const
+{
+    return m_Shaders.contains(name);
 }

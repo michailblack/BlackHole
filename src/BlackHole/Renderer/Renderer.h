@@ -12,9 +12,9 @@ public:
     static void EndScene();
 
     static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray);
-    static void Submit(const Ref<Shader>& shader, const Ref<Shader>& outlineShader, const Ref<Model>& model);
+    static void Submit(const Ref<Shader>& shader, const Ref<Model>& model);
 private:
-    struct RendererData
+    struct ScreenData
     {
         glm::mat4 ProjectionMatrix;
         glm::mat4 ViewMatrix;

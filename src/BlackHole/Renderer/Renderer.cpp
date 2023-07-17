@@ -4,7 +4,7 @@
 
 extern Ref<Shader> g_OutlineShader;
 
-Renderer::RendererData Renderer::m_Data;
+Renderer::ScreenData Renderer::m_Data;
 
 void Renderer::SetClearColor(glm::vec4 color)
 {
@@ -33,16 +33,21 @@ void Renderer::EndScene()
 
 void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray)
 {
+    shader->Bind();
     shader->UploadMat4("u_Projection", m_Data.ProjectionMatrix);
     shader->UploadMat4("u_View"      , m_Data.ViewMatrix);
-    shader->UploadMat4("u_Model"     , glm::mat4(1.0f));
+    shader->UploadMat4("u_Model"     , glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)));
 
-    shader->Bind();
+    shader->UploadInt("u_Texture", 0);
+
+    const auto& texture = TextureManager::Get().Load2D("../../../assets/textures/blending_transparent_window.png");
+    texture->Bind();
+
     vertexArray->Bind();
     glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 }
 
-void Renderer::Submit(const Ref<Shader>& shader, const Ref<Shader>& outlineShader, const Ref<Model>& model)
+void Renderer::Submit(const Ref<Shader>& shader, const Ref<Model>& model)
 {
     uint8_t diffuseMapIndex = 0;
     uint8_t specularMapIndex = 0;
@@ -50,7 +55,8 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<Shader>& outlineShade
     shader->Bind();
     shader->UploadMat4("u_Projection", m_Data.ProjectionMatrix);
     shader->UploadMat4("u_View"      , m_Data.ViewMatrix);
-    shader->UploadMat4("u_Model"     , glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)));
+    //shader->UploadMat4("u_Model"     , glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)));
+    shader->UploadMat4("u_Model"     , glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 
     shader->UploadFloat3("dirLight.direction", glm::vec3(1.0f, -1.0f, 1.0f));
     shader->UploadFloat3("dirLight.ambient"  , glm::vec3(0.2f));
@@ -62,7 +68,7 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<Shader>& outlineShade
     auto& textures = model->GetTextures();
     for (const auto& mesh : model->GetMeshes())
     {
-        size_t i = 0;
+        uint32_t i = 0;
         for (const auto& textureKey : mesh->GetTextureKeys())
         {
             const auto& [texture, type] = textures.at(textureKey);
@@ -85,22 +91,6 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<Shader>& outlineShade
         diffuseMapIndex = 0;
         specularMapIndex = 0;
 
-        mesh->GetVertexArray()->Bind();
-        glDrawRangeElements(GL_POINTS, 0, mesh->GetPointsIndicesCount() - 1, mesh->GetPointsIndicesCount(), GL_UNSIGNED_INT, nullptr);
-        glDrawRangeElements(GL_LINES, mesh->GetPointsIndicesCount(), mesh->GetLinesIndicesCount() - 1, mesh->GetLinesIndicesCount(), GL_UNSIGNED_INT, nullptr);
-        glDrawRangeElements(GL_TRIANGLES, mesh->GetLinesIndicesCount(), mesh->GetTrianglesIndicesCount() - 1, mesh->GetTrianglesIndicesCount(), GL_UNSIGNED_INT, nullptr);
-    }
-
-    glDisable(GL_DEPTH_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-
-    outlineShader->Bind();
-    outlineShader->UploadMat4("u_Projection", m_Data.ProjectionMatrix);
-    outlineShader->UploadMat4("u_View"      , m_Data.ViewMatrix);
-    outlineShader->UploadMat4("u_Model"     , glm::scale(glm::mat4(1.0f), glm::vec3(1.01f)));
-    for (const auto& mesh : model->GetMeshes())
-    {
         mesh->GetVertexArray()->Bind();
         glDrawRangeElements(GL_POINTS, 0, mesh->GetPointsIndicesCount() - 1, mesh->GetPointsIndicesCount(), GL_UNSIGNED_INT, nullptr);
         glDrawRangeElements(GL_LINES, mesh->GetPointsIndicesCount(), mesh->GetLinesIndicesCount() - 1, mesh->GetLinesIndicesCount(), GL_UNSIGNED_INT, nullptr);

@@ -1,7 +1,7 @@
 #pragma once
 #include "Mesh.h"
 
-#include "Texture2D.h"
+#include "TextureManager.h"
 
 class Model
 {

@@ -84,7 +84,7 @@ uniform DirLight dirLight;
 uniform int u_DiffuseMapsUsed;
 uniform int u_SpecularMapsUsed;
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 //vec3 CalcPointLight(PointLight light, vec3 normal, vec3 v_FragPos, vec3 viewDir);
 //vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 v_FragPos, vec3 viewDir);
 
@@ -95,7 +95,7 @@ void main()
 	vec3 viewDir = normalize(-v_FragPos);
 	
 	// phase 1: Directional lighting
-	vec3 result = CalcDirLight(dirLight, norm, viewDir);
+	vec4 result = CalcDirLight(dirLight, norm, viewDir);
 	
 	//// phase 2: Point lights
 	//for (int i = 0; i < NR_POINT_LIGHTS; ++i)
@@ -104,10 +104,10 @@ void main()
 	//// phase 3: Spot light
 	//result += CalcSpotLight(spotLight, norm, v_FragPos, viewDir);
 	
-	FragColor = vec4(result, 1.0);
+	FragColor = result;
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
 	vec3 lightDir = normalize(-light.direction);
 
@@ -119,17 +119,17 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 
 	// combine results
-	vec3 ambient  = vec3(0.0);
-	vec3 diffuse  = vec3(0.0);
-	vec3 specular = vec3(0.0);
+	vec4 ambient  = vec4(0.0);
+	vec4 diffuse  = vec4(0.0);
+	vec4 specular = vec4(0.0);
 	for (int i = 0; i < u_DiffuseMapsUsed; ++i)
 	{
-		ambient  += light.ambient  *        texture(material.diffuse[i],  v_TextureCoords).rgb;
-		diffuse  += light.diffuse  * diff * texture(material.diffuse[i],  v_TextureCoords).rgb;
+		ambient  += vec4(light.ambient, 1.0)  *        texture(material.diffuse[i],  v_TextureCoords);
+		diffuse  += vec4(light.diffuse, 1.0)  * diff * texture(material.diffuse[i],  v_TextureCoords);
 	}
 	for (int i = 0; i < u_SpecularMapsUsed; ++i)
 	{
-		specular += light.specular * spec * texture(material.specular[i], v_TextureCoords).rgb;
+		specular += vec4(light.specular, 1.0) * spec * texture(material.specular[i], v_TextureCoords);
 	}
 
 	return (ambient + diffuse + specular);

@@ -1,9 +1,8 @@
 #pragma once
-
 #include <string>
 
 #include "BlackHole/Events/Event.h"
-#include "BlackHole/Renderer/OpenGLContext.h"
+#include "BlackHole/OpenGL/Context.h"
 
 struct WindowProps
 {
@@ -41,7 +40,7 @@ private:
     void ShutDown();
 private:
     GLFWwindow* m_Window;
-    std::unique_ptr<OpenGLContext> m_Context;
+    Scope<Context> m_Context;
 
     struct WindowData
     {

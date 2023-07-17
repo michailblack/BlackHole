@@ -9,10 +9,12 @@ enum class ShaderDataType : uint16_t
     Bool
 };
 
-static uint32_t GetShaderDataTypeSize(ShaderDataType type)
+namespace Utils
 {
-    switch (type)
+    static uint32_t GetShaderDataTypeSize(ShaderDataType type)
     {
+        switch (type)
+        {
         case ShaderDataType::Float:   return sizeof(float);
         case ShaderDataType::Float2:  return sizeof(float) * 2;
         case ShaderDataType::Float3:  return sizeof(float) * 3;
@@ -25,6 +27,7 @@ static uint32_t GetShaderDataTypeSize(ShaderDataType type)
         case ShaderDataType::Mat4:    return sizeof(float) * 4 * 4;
         case ShaderDataType::Bool:    return sizeof(bool);
         default: BH_ASSERT(false, "Unknown ShaderDatatType!"); return 0;
+        }
     }
 }
 
@@ -39,7 +42,7 @@ struct BufferElement
     BufferElement(ShaderDataType type, const std::string& name, bool isNormalized = false)
         : Name(name), Offset(0), Size(0), Type(type), IsNormalized(isNormalized)
     {
-        Size = GetShaderDataTypeSize(Type);
+        Size = Utils::GetShaderDataTypeSize(Type);
     }
 };
 
@@ -106,24 +109,4 @@ public:
 private:
     uint32_t m_RendererID;
     uint32_t m_Count;
-};
-
-class VertexArray
-{
-public:
-    VertexArray();
-    ~VertexArray();
-
-    void Bind() const;
-    static void Unbind();
-
-    void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer);
-    void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
-
-    std::vector<Ref<VertexBuffer>> GetVertexBuffers() { return m_VertexBuffers; }
-    Ref<IndexBuffer> GetIndexBuffer() { return m_IndexBuffer; }
-private:
-    uint32_t m_RendererID;
-    std::vector<Ref<VertexBuffer>> m_VertexBuffers;
-    Ref<IndexBuffer> m_IndexBuffer;
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "Texture2D.h"
+#include "BlackHole/OpenGL/Texture2D.h"
 
 class TextureManager
 {
