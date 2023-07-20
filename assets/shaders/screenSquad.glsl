@@ -50,5 +50,7 @@ void main()
     for(int i = 0; i < 9; i++)
         col += sampleTex[i] * kernel[i];
     
+    col = texture(u_ScreenTexture, v_TextureCoords).rgb;
+
     FragColor = vec4(col, 1.0);
 }  

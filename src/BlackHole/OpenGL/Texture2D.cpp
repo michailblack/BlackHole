@@ -1,6 +1,5 @@
 #include "Texture2D.h"
 
-
 #include <stb_image.h>
 
 Texture2D::Texture2D(const std::string& path)
@@ -22,7 +21,7 @@ Texture2D::Texture2D(const std::string& path)
         {
         case 1:
             internalFormat = GL_R8;
-            dataFormat = GL_R;
+            dataFormat = GL_RED;
             break;
         case 2:
             internalFormat = GL_RG8;
@@ -53,8 +52,6 @@ Texture2D::Texture2D(const std::string& path)
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
-
-        glGenerateTextureMipmap(m_RendererID);
 
         stbi_image_free(data);
     }

@@ -21,10 +21,11 @@ void Renderer::SetViewport(int x, int y, int width, int height)
     glViewport(x, y, width, height);
 }
 
-void Renderer::BeginScene(const std::unique_ptr<Camera>& camera)
+void Renderer::BeginScene(const std::unique_ptr<Camera>& camera, const Ref<Cubemap>& skybox)
 {
     m_Data.ProjectionMatrix = camera->GetProjectionMatrix();
     m_Data.ViewMatrix = camera->GetViewMatrix();
+    m_Data.Skybox = skybox;
 }
 
 void Renderer::EndScene()
@@ -35,13 +36,11 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexA
 {
     shader->Bind();
     shader->UploadMat4("u_Projection", m_Data.ProjectionMatrix);
-    shader->UploadMat4("u_View"      , m_Data.ViewMatrix);
-    shader->UploadMat4("u_Model"     , glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)));
+    shader->UploadMat4("u_View"      , glm::mat4(glm::mat3(m_Data.ViewMatrix)));
 
-    shader->UploadInt("u_Texture", 0);
-
-    const auto& texture = TextureManager::Get().Load2D("../../../assets/textures/blending_transparent_window.png");
-    texture->Bind();
+    shader->UploadInt("u_Skybox", 0);
+    
+    m_Data.Skybox->Bind();
 
     vertexArray->Bind();
     glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
@@ -58,12 +57,12 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<Model>& model)
     //shader->UploadMat4("u_Model"     , glm::scale(glm::mat4(1.0f), glm::vec3(1.0f)));
     shader->UploadMat4("u_Model"     , glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 
-    shader->UploadFloat3("dirLight.direction", glm::vec3(1.0f, -1.0f, 1.0f));
-    shader->UploadFloat3("dirLight.ambient"  , glm::vec3(0.2f));
-    shader->UploadFloat3("dirLight.diffuse"  , glm::vec3(0.8f));
-    shader->UploadFloat3("dirLight.specular" , glm::vec3(0.5f));
-
-    shader->UploadFloat("material.shininess", 0.2f);
+    //shader->UploadFloat3("dirLight.direction", glm::vec3(1.0f, -1.0f, 1.0f));
+    //shader->UploadFloat3("dirLight.ambient"  , glm::vec3(0.2f));
+    //shader->UploadFloat3("dirLight.diffuse"  , glm::vec3(0.8f));
+    //shader->UploadFloat3("dirLight.specular" , glm::vec3(0.5f));
+    //
+    //shader->UploadFloat("u_Material.shininess", 0.2f);
 
     auto& textures = model->GetTextures();
     for (const auto& mesh : model->GetMeshes())
@@ -72,21 +71,24 @@ void Renderer::Submit(const Ref<Shader>& shader, const Ref<Model>& model)
         for (const auto& textureKey : mesh->GetTextureKeys())
         {
             const auto& [texture, type] = textures.at(textureKey);
-            if (type == TextureType::Diffuse)
+            /*if (type == TextureType::Diffuse)
             {
                 texture->Bind(i);
-                shader->UploadInt("material.diffuse[" + std::to_string(diffuseMapIndex++) + "]", i);
+                shader->UploadInt("u_Material.diffuse[" + std::to_string(diffuseMapIndex++) + "]", i);
             }
             else if (type == TextureType::Specular)
             {
                 texture->Bind(i);
-                shader->UploadInt("material.specular[" + std::to_string(specularMapIndex++) + "]", i);
-            }
+                shader->UploadInt("u_Material.specular[" + std::to_string(specularMapIndex++) + "]", i);
+            }*/
             ++i;
         }
 
-        shader->UploadInt("u_DiffuseMapsUsed" , std::min(++diffuseMapIndex , static_cast<uint8_t>(8)));
-        shader->UploadInt("u_SpecularMapsUsed", std::min(++specularMapIndex, static_cast<uint8_t>(8)));
+        //shader->UploadInt("u_DiffuseMapsUsed" , std::min(++diffuseMapIndex , static_cast<uint8_t>(8)));
+        //shader->UploadInt("u_SpecularMapsUsed", std::min(++specularMapIndex, static_cast<uint8_t>(8)));
+
+        m_Data.Skybox->Bind(i + 1);
+        shader->UploadInt("u_Skybox", i + 1);
 
         diffuseMapIndex = 0;
         specularMapIndex = 0;

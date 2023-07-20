@@ -16,6 +16,7 @@
 #include "BlackHole/Renderer/Model.h"
 
 #include "BlackHole/ImGui/ImGuiLayer.h"
+#include "BlackHole/OpenGL/Cubemap.h"
 
 class Application
 {
@@ -45,11 +46,17 @@ public:
     Ref<VertexBuffer> m_WindowVBO;
     Ref<IndexBuffer>  m_WindowIBO;
 
+    Ref<VertexArray> m_CubeVAO;
+    Ref<VertexBuffer> m_CubeVBO;
+    Ref<IndexBuffer> m_CubeIBO;
+
     Ref<VertexArray>  m_ScreenSquadVAO;
     Ref<VertexBuffer> m_ScreenSquadVBO;
     Ref<IndexBuffer>  m_ScreenSquadIBO;
 
     Ref<Model>  m_Model;
+
+    Ref<Cubemap> m_Cubemap;
 private:
     explicit Application(const WindowProps& props);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+class Cubemap;
+
 class Renderer
 {
 public:
@@ -8,7 +10,7 @@ public:
 
     static void SetViewport(int x, int y, int width, int height);
 
-    static void BeginScene(const std::unique_ptr<Camera>& camera);
+    static void BeginScene(const std::unique_ptr<Camera>& camera, const Ref<Cubemap>& skybox);
     static void EndScene();
 
     static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray);
@@ -18,5 +20,6 @@ private:
     {
         glm::mat4 ProjectionMatrix;
         glm::mat4 ViewMatrix;
+        Ref<Cubemap> Skybox;
     } static m_Data;
 };

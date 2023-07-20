@@ -19,12 +19,15 @@ void Context::Init()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_STENCIL_TEST);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_CULL_FACE);
+
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     BH_LOG_INFO("[OpenGL] Vendor: {0}", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
     BH_LOG_INFO("[OpenGL] Renderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
