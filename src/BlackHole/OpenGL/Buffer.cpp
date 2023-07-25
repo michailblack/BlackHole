@@ -2,7 +2,7 @@
 
 // Vertex Buffer
 
-VertexBuffer::VertexBuffer(const float* vertices, int64_t size)
+VertexBuffer::VertexBuffer(const float* vertices, uint64_t size)
     : m_Layout({})
 {
     glCreateBuffers(1, &m_RendererID);

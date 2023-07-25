@@ -8,15 +8,9 @@
 #include "BlackHole/Events/ApplicationEvent.h"
 #include "BlackHole/Events/KeyEvent.h"
 
-#include "BlackHole/OpenGL/Framebuffer.h"
 #include "BlackHole/OpenGL/Shader.h"
 
-#include "BlackHole/Renderer/Camera.h"
-#include "BlackHole/Renderer/CameraController.h"
-#include "BlackHole/Renderer/Model.h"
-
 #include "BlackHole/ImGui/ImGuiLayer.h"
-#include "BlackHole/OpenGL/Cubemap.h"
 
 class Application
 {
@@ -28,7 +22,7 @@ public:
     Application& operator=(const Application&) = delete;
     Application& operator=(Application&&) = delete;
 
-    static void Init(const WindowProps& props = WindowProps());
+    static void Init();
     static Application& Get() { return *s_Instance; }
     ImGuiLayer* GetImGuiLayer() const { return m_ImGuiLayer.get(); }
 
@@ -41,22 +35,6 @@ public:
 
     Window& GetWindow() const { return *m_Window; }
     GLFWwindow* GetNativeWindow() const { return m_Window->GetWindowGLFW(); }
-public:
-    Ref<VertexArray>  m_WindowVAO;
-    Ref<VertexBuffer> m_WindowVBO;
-    Ref<IndexBuffer>  m_WindowIBO;
-
-    Ref<VertexArray> m_CubeVAO;
-    Ref<VertexBuffer> m_CubeVBO;
-    Ref<IndexBuffer> m_CubeIBO;
-
-    Ref<VertexArray>  m_ScreenSquadVAO;
-    Ref<VertexBuffer> m_ScreenSquadVBO;
-    Ref<IndexBuffer>  m_ScreenSquadIBO;
-
-    Ref<Model>  m_Model;
-
-    Ref<Cubemap> m_Cubemap;
 private:
     explicit Application(const WindowProps& props);
 
@@ -68,12 +46,8 @@ private:
 
     bool m_IsRunning = true;
     Scope<Window> m_Window;
-    ShaderLibrary m_ShaderLibrary;
-    Scope<Framebuffer> m_Framebuffer;
     Scope<ImGuiLayer> m_ImGuiLayer;
     LayerStack m_LayerStack;
     Timer m_Timer;
-    Scope<Camera> m_Camera;
-    Scope<CameraController> m_CameraController;
     float m_LastFrameTime = 0.0f;
 };

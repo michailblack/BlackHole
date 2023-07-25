@@ -29,7 +29,8 @@ public:
 
     void SetVSync(bool enabled);
     bool IsVSync() const { return m_Data.VSync; }
-    void SetFullscreen(bool isFullscreen) { m_Data.IsFullscreen = isFullscreen; }
+
+    void SetFullscreen(bool isFullscreen);
     bool IsFullscreen() const { return m_Data.IsFullscreen; }
 
     void SetCallbackFunction(const EventCallbackFn& eventCallback) { m_Data.EventCallback = eventCallback; }

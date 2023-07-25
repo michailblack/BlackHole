@@ -25,11 +25,14 @@ private:
     static GLenum ShaderTypeFromStringKeyword(const std::string& keyword);
     void ProcessShaderFile(const std::string& shaderSources);
     void CreateProgram();
+
+    GLint GetUniformLocation(const std::string& name) const;
 private:
     uint32_t m_RendererID;
     std::string m_Name;
 
     std::unordered_map<GLenum, std::string> m_ShaderSourceCode;
+    mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
 };
 
 class ShaderLibrary

@@ -43,8 +43,6 @@ void Model::LoadMaterialTexture(const aiMaterial* material, TextureType type)
         default: BH_ASSERT(false, "Unknown texture type!");
     }
 
-    auto& textureManager = TextureManager::Get();
-
     for (size_t i = 0; i < material->GetTextureCount(aiType); ++i)
     {
         aiString relativeTexturePath;
@@ -54,7 +52,7 @@ void Model::LoadMaterialTexture(const aiMaterial* material, TextureType type)
         if (!m_Textures.contains(absoluteTexturePath))
         {
             m_Textures.emplace(relativeTexturePath.C_Str(),
-                std::make_pair(textureManager.Load2D(absoluteTexturePath), type));
+                std::make_pair(CreateRef<Texture2D>(absoluteTexturePath), type));
         }
     }
 }

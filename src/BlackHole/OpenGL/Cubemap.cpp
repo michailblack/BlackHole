@@ -16,6 +16,7 @@ Cubemap::Cubemap(const CubemapSpecification& spec)
     faces[5] = spec.Back;
 
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
 
     for (size_t i = 0; i < 6; ++i)
     {
@@ -26,17 +27,16 @@ Cubemap::Cubemap(const CubemapSpecification& spec)
 
             switch (channels)
             {
-            case 1: dataFormat = GL_RED; break;
-            case 2: dataFormat = GL_RG; break;
-            case 3: dataFormat = GL_RGB; break;
+            case 1: dataFormat = GL_RED;  break;
+            case 2: dataFormat = GL_RG;   break;
+            case 3: dataFormat = GL_RGB;  break;
             case 4: dataFormat = GL_RGBA; break;
             }
 
             BH_ASSERT(dataFormat, "Image format is not supported!");
 
-            if (i == 0)
-                glTextureStorage2D(m_RendererID, 1, GL_RGB8, width, height);
-            glTextureSubImage3D(m_RendererID, 0, 0, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, width, height, 1, dataFormat, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width, width, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+
             stbi_image_free(data);
         }
         else
@@ -44,6 +44,7 @@ Cubemap::Cubemap(const CubemapSpecification& spec)
             BH_ASSERT(false, "Failed to load cubemap face!");
         }
     }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     m_Length = width;
 

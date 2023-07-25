@@ -2,8 +2,9 @@
 /build*/
 /out*/
 
-## Model folder
+## Assets folder special
 assets/models/
+assets/textures/skyboxes/ignore/
 
 ## Dear ImGui artifacts
 imgui.ini

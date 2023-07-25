@@ -1,7 +1,6 @@
 #pragma once
 #include "Mesh.h"
-
-#include "TextureManager.h"
+#include "BlackHole/OpenGL/Texture2D.h"
 
 class Model
 {

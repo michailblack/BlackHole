@@ -83,7 +83,7 @@ private:
 class VertexBuffer
 {
 public:
-    explicit VertexBuffer(const float* vertices, int64_t size);
+    explicit VertexBuffer(const float* vertices, uint64_t size);
     ~VertexBuffer();
 
     void Bind() const;

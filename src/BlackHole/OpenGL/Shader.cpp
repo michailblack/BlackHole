@@ -9,7 +9,6 @@ Shader::Shader(const std::string& filepath)
 
     CreateProgram();
 
-    // ass/bb
     auto lastSlashPos = filepath.find_last_of("/\\");
     lastSlashPos = lastSlashPos == std::string::npos ? 0 : lastSlashPos + 1;
     const auto lastDotPos = filepath.rfind('.');
@@ -44,30 +43,22 @@ void Shader::Unbind()
 
 void Shader::UploadInt(const std::string& name, int value) const
 {
-    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-    BH_ASSERT(location != -1, "Uniform doesn't exist!");
-    glUniform1i(location, value);
+    glUniform1i(GetUniformLocation(name), value);
 }
 
 void Shader::UploadFloat(const std::string& name, float value) const
 {
-    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-    BH_ASSERT(location != -1, "Uniform doesn't exist!");
-    glUniform1f(location, value);
+    glUniform1f(GetUniformLocation(name), value);
 }
 
 void Shader::UploadFloat3(const std::string& name, const glm::vec3& vector) const
 {
-    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-    BH_ASSERT(location != -1, "Uniform doesn't exist!");
-    glUniform3f(location, vector.x, vector.y, vector.z);
+    glUniform3f(GetUniformLocation(name), vector.x, vector.y, vector.z);
 }
 
 void Shader::UploadMat4(const std::string& name, const glm::mat4& matrix) const
 {
-    const GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-    BH_ASSERT(location != -1, "Uniform doesn't exist!");
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 std::string Shader::ReadFile(const std::string& filepath)
@@ -104,8 +95,8 @@ GLenum Shader::ShaderTypeFromStringKeyword(const std::string& keyword)
         return GL_VERTEX_SHADER;
     if (keyword == "fragment")
         return GL_FRAGMENT_SHADER;
-    if (keyword == "compute")
-        return GL_COMPUTE_SHADER;
+    if (keyword == "geometry")
+        return GL_GEOMETRY_SHADER;
 
     BH_ASSERT(false, "Unknown shader type keyword!");
     return 0;
@@ -125,7 +116,6 @@ void Shader::ProcessShaderFile(const std::string& shaderSources)
 
         const size_t beginOfShaderTypeKeyword = pos + tokenSize + 1;
         std::string shaderType = shaderSources.substr(beginOfShaderTypeKeyword, eol - beginOfShaderTypeKeyword);
-        BH_ASSERT(Shader::ShaderTypeFromStringKeyword(shaderType), "Invalid shader type specified!");
 
         const size_t startOfShaderSourceCode = shaderSources.find_first_not_of("\r\n", eol);
         BH_ASSERT(startOfShaderSourceCode != std::string::npos, "Syntax error!");
@@ -220,6 +210,17 @@ void Shader::CreateProgram()
         glDetachShader(program, shaderID);
 
     m_RendererID = program;
+}
+
+GLint Shader::GetUniformLocation(const std::string& name) const
+{
+    const auto& it = m_UniformLocationCache.find(name);
+    if (it != m_UniformLocationCache.end())
+        return  it->second;
+
+    const GLint location = glGetUniformLocation(m_RendererID, name.data());
+    m_UniformLocationCache[name] = location;
+    return location;
 }
 
 void ShaderLibrary::Add(const Ref<Shader>& shader)

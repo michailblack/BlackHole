@@ -39,6 +39,31 @@ void Window::SetVSync(bool enabled)
     m_Data.VSync = enabled;
 }
 
+void Window::SetFullscreen(bool isFullscreen)
+{
+    m_Data.IsFullscreen = isFullscreen;
+
+    const int monitorWidth = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
+    const int monitorHeight = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
+
+    if (m_Data.IsFullscreen)
+    {
+        glfwSetWindowMonitor(m_Window,
+            glfwGetPrimaryMonitor(), 
+            0, 0,
+            monitorWidth, monitorHeight,
+            GLFW_DONT_CARE);
+    }
+    else
+    {
+        glfwSetWindowMonitor(m_Window,
+            nullptr, 
+            monitorWidth / 4, monitorHeight / 4,
+            monitorWidth / 2, monitorHeight / 2,
+            GLFW_DONT_CARE);
+    }
+}
+
 void Window::Init(const WindowProps& props)
 {
     m_Data.Title = props.Title;

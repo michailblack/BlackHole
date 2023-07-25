@@ -12,43 +12,43 @@ void PerspectiveCameraController::OnUpdate(Timestep ts)
 
     if (Input::IsKeyPressed(GLFW_KEY_W))
     {
-        m_CameraPosition += m_Camera->GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition += m_Camera.GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_S))
     {
-        m_CameraPosition -= m_Camera->GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition -= m_Camera.GetTargetDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_A))
     {
-        m_CameraPosition -= m_Camera->GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition -= m_Camera.GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_D))
     {
-        m_CameraPosition += m_Camera->GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition += m_Camera.GetRightDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_SPACE))
     {
-        m_CameraPosition += m_Camera->GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition += m_Camera.GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (Input::IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
     {
-        m_CameraPosition -= m_Camera->GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
-        m_Camera->SetCameraPosition(m_CameraPosition);
+        m_CameraPosition -= m_Camera.GetUpDirection() * glm::vec3(cameraTranslateSpeed * ts);
+        m_Camera.SetPosition(m_CameraPosition);
     }
 
     if (m_CameraWasRotated)
     {
-        static_cast<PerspectiveCamera*>(m_Camera)->SetCameraRotation(m_Yaw * ts, m_Pitch * ts);
+        m_Camera.SetRotation(m_Yaw * ts, m_Pitch * ts);
         m_CameraWasRotated = false;
     }
 }
@@ -78,7 +78,7 @@ bool PerspectiveCameraController::OnMouseMovedEvent(MouseMovedEvent& e)
         m_LastMouseX = e.GetX();
         m_LastMouseY = e.GetY();
 
-        m_Yaw = offsetX * m_CameraRotateSpeed;
+        m_Yaw   = offsetX * m_CameraRotateSpeed;
         m_Pitch = offsetY * m_CameraRotateSpeed;
 
         m_CameraWasRotated = true;
@@ -112,7 +112,7 @@ bool PerspectiveCameraController::OnMouseButtonReleasedEvent(MouseButtonReleased
 
 bool PerspectiveCameraController::OnWindowResizeEvent(WindowResizeEvent& e)
 {
-    static_cast<PerspectiveCamera*>(m_Camera)->SetAspectRatio(static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight()));
+    m_Camera.SetAspectRatio(static_cast<float>(e.GetWidth()) / static_cast<float>(e.GetHeight()));
     return true;
 }
 
@@ -130,7 +130,7 @@ bool PerspectiveCameraController::OnMouseScrolled(MouseScrolledEvent& e)
         m_FOV = 45.0f;
     }
 
-    static_cast<PerspectiveCamera*>(m_Camera)->SetFOV(m_FOV);
+    m_Camera.SetFOV(m_FOV);
 
     return true;
 }
