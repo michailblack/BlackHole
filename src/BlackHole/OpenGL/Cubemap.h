@@ -2,18 +2,17 @@
 
 struct CubemapSpecification
 {
-    std::string Right;
-    std::string Left;
-    std::string Top;
-    std::string Bottom;
-    std::string Back;
-    std::string Front;
+    std::filesystem::path Right;
+    std::filesystem::path Left;
+    std::filesystem::path Top;
+    std::filesystem::path Bottom;
+    std::filesystem::path Back;
+    std::filesystem::path Front;
 };
 
 class Cubemap
 {
 public:
-    Cubemap(const std::string& path);
     Cubemap(const CubemapSpecification& spec);
     ~Cubemap();
 
@@ -21,4 +20,5 @@ public:
 private:
     uint32_t m_RendererID;
     uint32_t m_Length;
+    uint32_t m_InternalFormat, m_DataFormat;
 };

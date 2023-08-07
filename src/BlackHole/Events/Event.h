@@ -1,10 +1,4 @@
 #pragma once
-
-#include <string>
-#include <functional>
-
-#include "BlackHole/Core/Core.h"
-
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
@@ -37,7 +31,7 @@ class Event
 {
     friend class EventDispatcher;
 public:
-    bool handled = false;
+    bool Handled = false;
 
     virtual EventType GetEventType() const = 0;
     virtual int GetCategoryFlags() const = 0;
@@ -67,7 +61,7 @@ public:
     {
         if (m_Event.GetEventType() == T::GetStaticType())
         {
-            m_Event.handled |= func(static_cast<T&>(m_Event));
+            m_Event.Handled |= func(static_cast<T&>(m_Event));
             return true;
         }
         return false;

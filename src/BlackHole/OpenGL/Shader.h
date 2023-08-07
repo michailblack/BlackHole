@@ -1,20 +1,21 @@
 #pragma once
 
-#include <glad/glad.h>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
 class Shader
 {
 public:
-    explicit Shader(const std::string& filepath);
+    explicit Shader(const std::filesystem::path& filepath);
     explicit Shader(std::string name, const std::string& vertexSrc, const std::string& fragmentSrc);
     ~Shader();
 
     void Bind() const;
     static void Unbind();
 
-    void UploadInt(const std::string& name, int value) const;
+    void UploadInt(const std::string& name, int32_t value) const;
+    void UploadUint(const std::string& name, uint32_t value) const;
+    void UploadIntArray(const std::string& name, uint32_t count, const int32_t* values) const;
     void UploadFloat(const std::string& name, float value) const;
     void UploadFloat3(const std::string& name, const glm::vec3& vector) const;
     void UploadMat4(const std::string& name, const glm::mat4& matrix) const;
@@ -22,17 +23,17 @@ public:
     const std::string& GetName() const { return m_Name; }
 private:
     static std::string ReadFile(const std::string& filepath);
-    static GLenum ShaderTypeFromStringKeyword(const std::string& keyword);
+    static uint32_t ShaderTypeFromStringKeyword(const std::string& keyword);
     void ProcessShaderFile(const std::string& shaderSources);
     void CreateProgram();
 
-    GLint GetUniformLocation(const std::string& name) const;
+    int32_t GetUniformLocation(const std::string& name) const;
 private:
     uint32_t m_RendererID;
     std::string m_Name;
 
-    std::unordered_map<GLenum, std::string> m_ShaderSourceCode;
-    mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
+    std::unordered_map<uint32_t, std::string> m_ShaderSourceCode;
+    mutable std::unordered_map<std::string, int32_t> m_UniformLocationCache;
 };
 
 class ShaderLibrary

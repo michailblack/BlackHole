@@ -1,5 +1,7 @@
 #include "VertexArray.h"
 
+#include <glad/glad.h>
+
 namespace Utils
 {
     static GLint GetComponentCount(const ShaderDataType type)
@@ -66,33 +68,40 @@ void VertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 {
     BH_ASSERT(!vertexBuffer->GetLayout().GetElements().empty(), "Vertex Buffer has no layout!");
 
-    glBindVertexArray(m_RendererID);
-    vertexBuffer->Bind();
     const auto& layout = vertexBuffer->GetLayout();
     uint32_t index = 0;
     for (const auto& element : layout)
     {
-        glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index,
-            Utils::GetComponentCount(element.Type),
-            Utils::ShaderDataTypeToOpenGLBaseType(element.Type),
-            element.IsNormalized ? GL_TRUE : GL_FALSE,
-            layout.GetStride(),
-            reinterpret_cast<const void*>(element.Offset)
-        );
-        ++index;
-    }
-    glBindVertexArray(0);
-    VertexBuffer::Unbind();
+        const GLint componentCount = Utils::GetComponentCount(element.Type);
 
+        uint8_t attribPointersNeeded = 1;
+        if (componentCount > 4)
+        {
+            attribPointersNeeded = 4;
+            while (componentCount % attribPointersNeeded != 0)
+                --attribPointersNeeded;
+        }
+
+        const uint64_t vecOffset = Utils::GetShaderDataTypeSize(element.Type) / attribPointersNeeded;
+        for (uint8_t i = 0; i < attribPointersNeeded; ++i)
+        {
+            glEnableVertexArrayAttrib(m_RendererID, index);
+            glVertexArrayAttribFormat(m_RendererID,
+                index,
+                componentCount / attribPointersNeeded,
+                Utils::ShaderDataTypeToOpenGLBaseType(element.Type),
+                element.IsNormalized ? GL_TRUE : GL_FALSE,
+                element.Offset + vecOffset * i);
+            glVertexArrayAttribBinding(m_RendererID, index, 0);
+            vertexBuffer->BindToBindingPoint(m_RendererID, 0, 0);
+            ++index;
+        }
+    }
     m_VertexBuffers.push_back(vertexBuffer);
 }
 
 void VertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 {
-    glBindVertexArray(m_RendererID);
-    indexBuffer->Bind();
-    glBindVertexArray(0);
-    IndexBuffer::Unbind();
+    indexBuffer->BindToVAO(m_RendererID);
     m_IndexBuffer = indexBuffer;
 }

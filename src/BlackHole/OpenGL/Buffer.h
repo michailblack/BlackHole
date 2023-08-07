@@ -80,33 +80,62 @@ private:
     uint32_t m_Stride = 0;
 };
 
-class VertexBuffer
+class Buffer
 {
 public:
-    explicit VertexBuffer(const float* vertices, uint64_t size);
-    ~VertexBuffer();
+    explicit Buffer(uint64_t size);
+    explicit Buffer(uint64_t size, const void* data);
+    virtual ~Buffer();
 
-    void Bind() const;
-    static void Unbind();
+    void* Map(uint64_t offset, uint64_t length) const;
+    void Unmap() const;
 
-    const BufferLayout& GetLayout() const { return m_Layout; }
-    void SetLayout(const BufferLayout& layout) { m_Layout = layout; }
-private:
+    void GetBufferParameterInt(uint32_t paramName, int32_t* params) const;
+    void GetBufferParameterInt64(uint32_t paramName, int64_t* params) const;
+
+    virtual void Bind() const = 0;
+protected:
     uint32_t m_RendererID;
+};
+
+class VertexBuffer : public Buffer
+{
+public:
+    explicit VertexBuffer(uint64_t size);
+    explicit VertexBuffer(uint64_t size, const float* vertices);
+    ~VertexBuffer() override = default;
+
+    void Bind() const override;
+
+    void BindToBindingPoint(uint32_t vaObj, uint32_t bindingIndex, uint64_t offset) const;
+
+    void SetLayout(const BufferLayout& layout) { m_Layout = layout; }
+    const BufferLayout& GetLayout() const { return m_Layout; }
+private:
     BufferLayout m_Layout;
 };
 
-class IndexBuffer
+class IndexBuffer : public Buffer
 {
 public:
-    explicit IndexBuffer(const uint32_t* indices, uint32_t count);
-    ~IndexBuffer();
+    explicit IndexBuffer(uint64_t count);
+    explicit IndexBuffer(const uint32_t* indices, uint64_t count);
+    ~IndexBuffer() override = default;
 
-    void Bind() const;
-    static void Unbind();
+    void Bind() const override;
+
+    void BindToVAO(uint32_t vaObj) const;
 
     uint32_t GetCount() const { return m_Count; }
 private:
-    uint32_t m_RendererID;
-    uint32_t m_Count;
+    uint64_t m_Count;
+};
+
+class UniformBuffer : public Buffer
+{
+public:
+    UniformBuffer(uint64_t size, uint32_t binding);
+    ~UniformBuffer() override = default;
+
+    void Bind() const override {};
 };

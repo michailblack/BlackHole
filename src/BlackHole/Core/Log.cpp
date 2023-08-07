@@ -1,6 +1,6 @@
 #include "Log.h"
 
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/stdout_color_sinks-inl.h"
 
 std::shared_ptr<spdlog::logger> Log::s_Logger = nullptr;
 

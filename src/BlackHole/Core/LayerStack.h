@@ -1,7 +1,4 @@
 #pragma once
-
-#include <vector>
-
 #include "Layer.h"
 
 class LayerStack
@@ -10,7 +7,7 @@ class LayerStack
     using LayerStackIterator        =   std::vector<Layer*>::iterator;
     using LayerStackReverseIterator =   std::vector<Layer*>::reverse_iterator;
 public:
-    LayerStack();
+    LayerStack() = default;
     ~LayerStack();
 
     void PushLayer(Layer* layer);
@@ -25,6 +22,6 @@ public:
     LayerStackReverseIterator rend() { return m_Layers.rend(); }
 private:
     LayerStackBuffer m_Layers;
-    unsigned int m_LayerInsertIndex;
+    unsigned int m_LayerInsertIndex = 0;
 };
 

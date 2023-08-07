@@ -1,6 +1,4 @@
 #pragma once
-#include <string>
-
 #include "BlackHole/Events/Event.h"
 #include "BlackHole/OpenGL/Context.h"
 
@@ -35,7 +33,7 @@ public:
 
     void SetCallbackFunction(const EventCallbackFn& eventCallback) { m_Data.EventCallback = eventCallback; }
 
-    GLFWwindow* GetWindowGLFW() const { return m_Window; }
+    GLFWwindow* GetNativeWindow() const { return m_Window; }
 private:
     void Init(const WindowProps& props);
     void ShutDown();

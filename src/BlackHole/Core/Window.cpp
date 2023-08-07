@@ -1,10 +1,10 @@
 #include "Window.h"
 
+#include <GLFW/glfw3.h>
+
 #include "BlackHole/Events/ApplicationEvent.h"
 #include "BlackHole/Events/KeyEvent.h"
 #include "BlackHole/Events/MouseEvent.h"
-
-#include <GLFW/glfw3.h>
 
 static bool gs_GLFWInitialized = false;
 
@@ -81,9 +81,18 @@ void Window::Init(const WindowProps& props)
         gs_GLFWInitialized = true;
     }
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
+#ifdef BH_DEBUG
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif
+
     m_Window = glfwCreateWindow(static_cast<int>(props.Width), static_cast<int>(props.Height), props.Title.c_str(), nullptr, nullptr);
 
-    m_Context = std::make_unique<Context>(m_Window);
+    m_Context = CreateScope<Context>(m_Window);
     m_Context->Init();
 
     glfwSetWindowUserPointer(m_Window, &m_Data);

@@ -1,8 +1,6 @@
 #pragma once
 #include "Event.h"
 
-#include <sstream>
-
 class WindowResizeEvent : public Event
 {
 public:

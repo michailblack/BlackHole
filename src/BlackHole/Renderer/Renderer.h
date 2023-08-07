@@ -1,33 +1,33 @@
 #pragma once
-
-#include "BlackHole/OpenGL/Cubemap.h"
-#include "BlackHole/OpenGL/UniformBuffer.h"
-#include "BlackHole/OpenGL/VertexArray.h"
 #include "BlackHole/Renderer/Camera.h"
 #include "BlackHole/Renderer/Model.h"
 
 class Renderer
 {
 public:
-    static void SetClearColor(glm::vec4 color) { glClearColor(color.x, color.y, color.z, color.w); }
-    static void Clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); }
-    static void SetViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
-
     static void Init();
+    static void Shutdown();
+
+    static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
     static void BeginScene(const PerspectiveCamera& camera);
     static void EndScene();
 
-    static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform);
-    static void Submit(const Ref<Shader>& shader, const Ref<Model>& model, const glm::mat4& transform);
+    static void Submit(const Ref<Model>& model, const glm::mat4& transform = glm::mat4(1.0f));
 
-    static ShaderLibrary& GetShaderLibrary() { return m_Data.ShaderLibrary; }
-private:
-    struct RendererData
+    static void DrawSkybox();
+
+    // Stats
+    struct Statistics
     {
-        ShaderLibrary ShaderLibrary;
-        Ref<UniformBuffer> MatricesUB;
+        uint32_t DrawCalls = 0;
+        uint32_t PointsCount = 0;
+        uint32_t LinesCount = 0;
+        uint32_t TriangleCount = 0;
 
-        Ref<Cubemap> Skybox;
-    } static m_Data;
+        uint32_t GetTotalVertexCount() const { return TriangleCount * 3 + LinesCount * 2 + PointsCount; }
+        uint32_t GetTotalIndexCount() const { return TriangleCount * 3 + LinesCount * 2 + PointsCount; }
+    };
+	static void ResetStats();
+	static Statistics GetStats();
 };

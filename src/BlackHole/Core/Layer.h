@@ -1,8 +1,6 @@
 #pragma once
-
-#include <string>
-
 #include "Timestep.h"
+
 #include "BlackHole/Events/Event.h"
 
 class Layer

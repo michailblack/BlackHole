@@ -1,20 +1,16 @@
 #include "Shader.h"
 
+#include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-Shader::Shader(const std::string& filepath)
+Shader::Shader(const std::filesystem::path& filepath)
 {
-    const std::string shaderFileSrc = Shader::ReadFile(filepath);
+    const std::string shaderFileSrc = Shader::ReadFile(filepath.string());
     ProcessShaderFile(shaderFileSrc);
 
     CreateProgram();
 
-    auto lastSlashPos = filepath.find_last_of("/\\");
-    lastSlashPos = lastSlashPos == std::string::npos ? 0 : lastSlashPos + 1;
-    const auto lastDotPos = filepath.rfind('.');
-    const auto count = (lastDotPos == std::string::npos || lastDotPos < lastSlashPos) ?
-        filepath.size() - lastSlashPos : lastDotPos - lastSlashPos;
-    m_Name = filepath.substr(lastSlashPos, count);
+    m_Name = filepath.filename().stem().string();
 }
 
 Shader::Shader(std::string name, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -41,24 +37,34 @@ void Shader::Unbind()
     glUseProgram(0);
 }
 
-void Shader::UploadInt(const std::string& name, int value) const
+void Shader::UploadInt(const std::string& name, int32_t value) const
 {
-    glUniform1i(GetUniformLocation(name), value);
+    glProgramUniform1i(m_RendererID, GetUniformLocation(name), value);
+}
+
+void Shader::UploadUint(const std::string& name, uint32_t value) const
+{
+    glProgramUniform1ui(m_RendererID, GetUniformLocation(name), value);
+}
+
+void Shader::UploadIntArray(const std::string& name, uint32_t count, const int32_t* values) const
+{
+    glProgramUniform1iv(m_RendererID, GetUniformLocation(name), count, values);
 }
 
 void Shader::UploadFloat(const std::string& name, float value) const
 {
-    glUniform1f(GetUniformLocation(name), value);
+    glProgramUniform1f(m_RendererID, GetUniformLocation(name), value);
 }
 
 void Shader::UploadFloat3(const std::string& name, const glm::vec3& vector) const
 {
-    glUniform3f(GetUniformLocation(name), vector.x, vector.y, vector.z);
+    glProgramUniform3f(m_RendererID, GetUniformLocation(name), vector.x, vector.y, vector.z);
 }
 
 void Shader::UploadMat4(const std::string& name, const glm::mat4& matrix) const
 {
-    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
+    glProgramUniformMatrix4fv(m_RendererID, GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 std::string Shader::ReadFile(const std::string& filepath)
@@ -89,7 +95,7 @@ std::string Shader::ReadFile(const std::string& filepath)
     return shaderSrc;
 }
 
-GLenum Shader::ShaderTypeFromStringKeyword(const std::string& keyword)
+uint32_t Shader::ShaderTypeFromStringKeyword(const std::string& keyword)
 {
     if (keyword == "vertex")
         return GL_VERTEX_SHADER;
@@ -212,7 +218,7 @@ void Shader::CreateProgram()
     m_RendererID = program;
 }
 
-GLint Shader::GetUniformLocation(const std::string& name) const
+int32_t Shader::GetUniformLocation(const std::string& name) const
 {
     const auto& it = m_UniformLocationCache.find(name);
     if (it != m_UniformLocationCache.end())

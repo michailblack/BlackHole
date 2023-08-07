@@ -1,34 +1,36 @@
 #include "Application.h"
 
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
-#include "BlackHole/Layers/WorldLayer.h"
+#include "BlackHole/Layers/EditorLayer.h"
+
+#include "BlackHole/Renderer/Renderer.h"
 
 Application* Application::s_Instance = nullptr;
 
 Application::Application(const WindowProps& props)
 {
+    stbi_set_flip_vertically_on_load(true);
+
+    BH_ASSERT(!s_Instance, "Application already exists!");
+    s_Instance = this;
+
     m_Window = CreateScope<Window>(props);
     m_Window->SetCallbackFunction(BH_BIND_EVENT_FN(OnEvent));
 
-    m_ImGuiLayer = CreateScope<ImGuiLayer>();
+    Renderer::Init();
+    
+    m_ImGuiLayer = new ImGuiLayer();
+    PushOverlay(m_ImGuiLayer);
+
+    s_Instance->PushLayer(new EditorLayer());
 }
 
 Application::~Application()
 {
     for (const auto layer : m_LayerStack)
         layer->OnDetach();
-    delete s_Instance;
-}
-
-void Application::Init()
-{
-    s_Instance = new Application(WindowProps());
-    s_Instance->PushOverlay(s_Instance->GetImGuiLayer());
-
-    Renderer::Init();
-
-    s_Instance->PushLayer(new WorldLayer());
 }
 
 void Application::Run()
@@ -39,8 +41,8 @@ void Application::Run()
         const Timestep ts = time - m_LastFrameTime;
         m_LastFrameTime = time;
 
-        Renderer::SetClearColor({0.2f, 0.2f, 0.2f, 1.0f});
-        Renderer::Clear();
+        Framebuffer::ClearDefaultFramebufferColorAttachment({0.2f, 0.2f, 0.2f, 1.0f});
+        Framebuffer::ClearDefaultFramebufferDepthAttachment();
 
         for (Layer* layer : m_LayerStack)
             layer->OnUpdate(ts);
@@ -61,10 +63,11 @@ void Application::OnEvent(Event& e)
     dispatcher.Dispatch<WindowCloseEvent>(BH_BIND_EVENT_FN(OnWindowClose));
     dispatcher.Dispatch<WindowResizeEvent>(BH_BIND_EVENT_FN(OnWindowResize));
 
-    for (const auto layer : m_LayerStack | std::views::reverse)
+    for (const auto& layer : m_LayerStack | std::views::reverse)
     {
-        if (e.handled)
+        if (e.Handled)
             break;
+
         layer->OnEvent(e);
     }
 }
@@ -97,9 +100,6 @@ bool Application::OnKeyPressed(KeyPressedEvent& e)
 {
     switch (e.GetKeyCode())
     {
-    case GLFW_KEY_ESCAPE:
-        m_IsRunning = false;
-        break;
     case GLFW_KEY_F11:
         m_Window->SetFullscreen(!m_Window->IsFullscreen());
         break;

@@ -1,58 +1,80 @@
 #include "Cubemap.h"
 
 #include <stb_image.h>
+#include <glad/glad.h>
+#include <glm/common.hpp>
+#include <glm/exponential.hpp>
 
 Cubemap::Cubemap(const CubemapSpecification& spec)
 {
     std::array<std::string, 6> faces;
 
+    faces[0] = spec.Right.string();
+    faces[1] = spec.Left.string();
+    faces[2] = spec.Top.string();
+    faces[3] = spec.Bottom.string();
+    faces[4] = spec.Front.string();
+    faces[5] = spec.Back.string();
+
     int width, height, channels;
+    stbi_uc* rightFacePixels = stbi_load(faces[0].c_str() , &width, &height, &channels, 0);
+    BH_ASSERT(rightFacePixels, "Failed to load image!");
 
-    faces[0] = spec.Right;
-    faces[1] = spec.Left;
-    faces[2] = spec.Top;
-    faces[3] = spec.Bottom;
-    faces[4] = spec.Front;
-    faces[5] = spec.Back;
-
-    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_RendererID);
-
-    for (size_t i = 0; i < 6; ++i)
+    if (rightFacePixels)
     {
-        stbi_uc* data = stbi_load(faces[i].c_str() , &width, &height, &channels, 0);
-        if (data)
+        GLenum internalFormat = 0, dataFormat = 0;
+        switch (channels)
         {
-            GLenum dataFormat = 0;
+        case 1:
+            internalFormat = GL_R8;
+            dataFormat = GL_RED;
+            break;
+        case 2:
+            internalFormat = GL_RG8;
+            dataFormat = GL_RG;
+            break;
+        case 3:
+            internalFormat = GL_RGB8;
+            dataFormat = GL_RGB;
+            break;
+        case 4:
+            internalFormat = GL_RGBA8;
+            dataFormat = GL_RGBA;
+            break;
+        }
 
-            switch (channels)
+        BH_ASSERT(internalFormat && dataFormat, "Image format is not supported!");
+
+        m_InternalFormat = internalFormat;
+        m_DataFormat = dataFormat;
+
+        m_Length = static_cast<uint32_t>(glm::min(width, height));
+
+        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_RendererID);
+        glTextureStorage2D(m_RendererID, static_cast<int32_t>(glm::log2(static_cast<float>(static_cast<int32_t>(m_Length))) + 1), m_InternalFormat, static_cast<int32_t>(m_Length), static_cast<int32_t>(m_Length));
+        glTextureSubImage3D(m_RendererID, 0, 0, 0, 0, static_cast<int32_t>(m_Length), static_cast<int32_t>(m_Length), 1, m_DataFormat, GL_UNSIGNED_BYTE, rightFacePixels);
+
+        stbi_image_free(rightFacePixels);
+
+        for (int32_t i = 1; i < 6; ++i)
+        {
+            stbi_uc* pixels = stbi_load(faces[i].c_str() , &width, &height, &channels, 0);
+            BH_ASSERT(pixels, "Failed to load image!");
+            if (pixels)
             {
-            case 1: dataFormat = GL_RED;  break;
-            case 2: dataFormat = GL_RG;   break;
-            case 3: dataFormat = GL_RGB;  break;
-            case 4: dataFormat = GL_RGBA; break;
+                glTextureSubImage3D(m_RendererID, 0, 0, 0, i, static_cast<int32_t>(m_Length), static_cast<int32_t>(m_Length), 1, m_DataFormat, GL_UNSIGNED_BYTE, pixels);
+                stbi_image_free(pixels);
             }
-
-            BH_ASSERT(dataFormat, "Image format is not supported!");
-
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB8, width, width, 0, dataFormat, GL_UNSIGNED_BYTE, data);
-
-            stbi_image_free(data);
         }
-        else
-        {
-            BH_ASSERT(false, "Failed to load cubemap face!");
-        }
+
+        glGenerateTextureMipmap(m_RendererID);
+
+        glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-    m_Length = width;
-
-    glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
 Cubemap::~Cubemap()

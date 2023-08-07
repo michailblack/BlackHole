@@ -1,8 +1,5 @@
 #include "LayerStack.h"
 
-LayerStack::LayerStack()
-    : m_LayerInsertIndex(0) {}
-
 LayerStack::~LayerStack()
 {
 	for (const Layer* layer : m_Layers)

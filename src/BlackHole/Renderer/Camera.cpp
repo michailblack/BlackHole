@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 PerspectiveCamera::PerspectiveCamera(float fovDegrees, float aspectRatio, float near, float far)
     : m_FOV(fovDegrees)
@@ -8,15 +9,14 @@ PerspectiveCamera::PerspectiveCamera(float fovDegrees, float aspectRatio, float 
     , m_Near(near)
     , m_Far(far)
 {
-    m_ProjectionMatrix = glm::perspective(glm::radians(fovDegrees), aspectRatio, near, far);
-    m_ViewMatrix = glm::translate(glm::mat4(1.0f), -m_Position);
-    m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+    UpdateProjection();
+    UpdateView();
 }
 
-void PerspectiveCamera::SetRotation(float offsetX, float offsetY)
+void PerspectiveCamera::SetRotation(float yaw, float pitch)
 {
-    glm::quat quatPitch = glm::angleAxis(glm::radians(offsetY), glm::vec3(1, 0, 0));
-    const glm::quat quatYaw = glm::angleAxis(glm::radians(offsetX), glm::vec3(0, 1, 0));
+    const glm::quat quatYaw = glm::angleAxis(yaw, glm::vec3(0, 1, 0));
+    glm::quat quatPitch = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
 
     m_QuatPitch = m_QuatPitch * quatPitch;
 
@@ -36,36 +36,46 @@ void PerspectiveCamera::SetRotation(float offsetX, float offsetY)
     m_Up = glm::normalize(invOrientation * glm::vec3(0, 1, 0));
     m_Right = glm::normalize(invOrientation * glm::vec3(1, 0, 0));
 
-    RecalculateMatrices();
+    UpdateView();
+}
+
+void PerspectiveCamera::SetPosition(const glm::vec3& pos)
+{
+    m_Position = pos;
+
+    UpdateView();
 }
 
 void PerspectiveCamera::SetPerspectiveProjection(float fovDegrees, float aspectRatio, float near, float far)
 {
-    m_ProjectionMatrix = glm::perspective(glm::radians(fovDegrees), aspectRatio, near, far);
     m_FOV = fovDegrees;
     m_AspectRatio = aspectRatio;
     m_Near = near;
     m_Far = far;
-    m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+    
+    UpdateProjection();
 }
 
 void PerspectiveCamera::SetAspectRatio(float aspectRatio)
 {
-    m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), aspectRatio, m_Near, m_Far);
     m_AspectRatio = aspectRatio;
-    m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+
+    UpdateProjection();
 }
 
-void PerspectiveCamera::SetFOV(float fov)
+void PerspectiveCamera::SetFOV(float fovDegrees)
 {
-    m_ProjectionMatrix = glm::perspective(glm::radians(fov), m_AspectRatio, m_Near, m_Far);
-    m_FOV = fov;
-    m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+    m_FOV = fovDegrees;
+
+    UpdateProjection();
 }
 
-void PerspectiveCamera::RecalculateMatrices()
+void PerspectiveCamera::UpdateProjection()
 {
-    m_ViewMatrix = glm::mat4_cast(m_Orientation) *
-                   glm::translate(glm::mat4(1.0f), -m_Position);
-    m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+    m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_Near, m_Far);
+}
+
+void PerspectiveCamera::UpdateView()
+{
+    m_ViewMatrix = glm::mat4_cast(m_Orientation) * glm::translate(glm::mat4(1.0f), -m_Position);
 }

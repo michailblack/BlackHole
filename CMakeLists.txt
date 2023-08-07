@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 file(GLOB_RECURSE BH_SRC
     src/BlackHole/*.cpp
     src/BlackHole/*.h
-    src/BlackHoleApp.cpp
+    src/EntryPoint.cpp
 )
 
 add_subdirectory(vendor/spdlog)
@@ -25,9 +25,7 @@ add_compile_definitions(
 	$<$<CONFIG:Release>:BH_RELEASE>
 	GLFW_INCLUDE_NONE)
 
-add_executable(${CMAKE_PROJECT_NAME}
-	${BH_SRC}
-)
+add_executable(${CMAKE_PROJECT_NAME} ${BH_SRC})
 
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
     src

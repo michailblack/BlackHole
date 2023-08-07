@@ -1,29 +1,29 @@
 #include "Mesh.h"
 
-struct Vertex
-{
-    glm::vec3 Position      = glm::vec3(0.0f);
-    glm::vec3 Normal        = glm::vec3(0.0f);
-    glm::vec2 TextureCoords = glm::vec2(0.0f);
-};
+#include "Model.h"
 
-Mesh::Mesh(const aiMesh* mesh, const aiScene* scene)
-    : m_VertexArray(CreateRef<VertexArray>())
-    , m_CountPointsIndices(0)
-    , m_CountLinesIndices(0)
-    , m_CountTrianglesIndices(0)
+Mesh::Mesh(const aiMesh* mesh, const aiScene* scene, const Model* parentModel)
+    : m_ParentModel(parentModel)
 {
-    CollectMeshInfo(mesh, scene);
+    CollectMeshInfo(mesh);
+
+    if (mesh->mMaterialIndex < scene->mNumMaterials)
+    {
+        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        CollectMaterialTextureKeys(material, aiTextureType_DIFFUSE);
+        CollectMaterialTextureKeys(material, aiTextureType_SPECULAR);
+    }
 }
 
-void Mesh::CollectMeshInfo(const aiMesh* mesh, const aiScene* scene)
+void Mesh::CollectMeshInfo(const aiMesh* mesh)
 {
-    std::vector<Vertex> vertices(mesh->mNumVertices);
-    std::vector<uint32_t> pointsIndices, linesIndices, trianglesIndices;
+    std::vector<TriangleVertex> vertices;
+    vertices.reserve(mesh->mNumVertices);
 
     for (size_t i = 0; i < mesh->mNumVertices; ++i)
     {
-        Vertex vertex;
+        TriangleVertex vertex = {};
+
         vertex.Position.x = mesh->mVertices[i].x;
         vertex.Position.y = mesh->mVertices[i].y;
         vertex.Position.z = mesh->mVertices[i].z;
@@ -37,12 +37,14 @@ void Mesh::CollectMeshInfo(const aiMesh* mesh, const aiScene* scene)
 
         if (mesh->HasTextureCoords(0))
         {
-            vertex.TextureCoords.x = mesh->mTextureCoords[0][i].x;
-            vertex.TextureCoords.y = mesh->mTextureCoords[0][i].y;
+            vertex.TexCoord.x = mesh->mTextureCoords[0][i].x;
+            vertex.TexCoord.y = mesh->mTextureCoords[0][i].y;
         }
 
-        vertices[i] = vertex;
+        vertices.push_back(vertex);
     }
+
+    std::vector<uint32_t> pointIndices, lineIndices, triangleIndices;
 
     for (size_t i = 0; i < mesh->mNumFaces; ++i)
     {
@@ -51,61 +53,74 @@ void Mesh::CollectMeshInfo(const aiMesh* mesh, const aiScene* scene)
         switch (face.mNumIndices)
         {
             case 1:
-                pointsIndices.push_back(face.mIndices[0]);
+                pointIndices.push_back(face.mIndices[0]);
                 break;
             case 2:
-                linesIndices.push_back(face.mIndices[0]);
-                linesIndices.push_back(face.mIndices[1]);
+                lineIndices.push_back(face.mIndices[0]);
+                lineIndices.push_back(face.mIndices[1]);
                 break;
             case 3:
-                trianglesIndices.push_back(face.mIndices[0]);
-                trianglesIndices.push_back(face.mIndices[1]);
-                trianglesIndices.push_back(face.mIndices[2]);
+                triangleIndices.push_back(face.mIndices[0]);
+                triangleIndices.push_back(face.mIndices[1]);
+                triangleIndices.push_back(face.mIndices[2]);
                 break;
             default: BH_ASSERT(false, "Unsupported mesh primitive"); return;
         }
     }
 
-    m_CountPointsIndices = pointsIndices.size();
-    m_CountLinesIndices = linesIndices.size();
-    m_CountTrianglesIndices = trianglesIndices.size();
+    m_PointIndicesCount = pointIndices.size();
+    m_LineIndicesCount = lineIndices.size();
+    m_TriangleIndicesCount = triangleIndices.size();
 
     std::vector<uint32_t> indices;
-    indices.reserve(m_CountPointsIndices + m_CountLinesIndices + m_CountTrianglesIndices);
-    indices.insert(indices.end(), pointsIndices.begin(), pointsIndices.end());
-    indices.insert(indices.end(), linesIndices.begin(), linesIndices.end());
-    indices.insert(indices.end(), trianglesIndices.begin(), trianglesIndices.end());
+    indices.reserve(m_PointIndicesCount + m_LineIndicesCount + m_TriangleIndicesCount);
 
-    if (mesh->mMaterialIndex < scene->mNumMaterials)
-    {
-        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        m_TextureKeys.reserve(material->GetTextureCount(aiTextureType_DIFFUSE) + material->GetTextureCount(aiTextureType_SPECULAR));
-        CollectMaterialTextureKeys(material, aiTextureType_DIFFUSE);
-        CollectMaterialTextureKeys(material, aiTextureType_SPECULAR);
-    }
+    indices.insert(indices.end(), pointIndices.begin(), pointIndices.end());
+    indices.insert(indices.end(), lineIndices.begin(), lineIndices.end());
+    indices.insert(indices.end(), triangleIndices.begin(), triangleIndices.end());
 
-    const auto vertexBuffer = CreateRef<VertexBuffer>(reinterpret_cast<float*>(vertices.data()), 
-        static_cast<int32_t>(vertices.size() * sizeof(Vertex)));
-    const auto indexBuffer = CreateRef<IndexBuffer>(indices.data(), 
-        static_cast<uint32_t>(indices.size()));
-
+    m_VertexArray = CreateRef<VertexArray>();
+    const auto& vertexBuffer = CreateRef<VertexBuffer>(vertices.size() * sizeof(TriangleVertex), reinterpret_cast<const float*>(vertices.data()));
     vertexBuffer->SetLayout({
-        {ShaderDataType::Float3, "a_Position"     },
-        {ShaderDataType::Float3, "a_Normal"       },
-        {ShaderDataType::Float2, "a_TextureCoords"}
+        { ShaderDataType::Float3, "a_Pos"      },
+        { ShaderDataType::Float3, "a_Normal"   },
+        { ShaderDataType::Float2, "a_TexCoord" }
     });
-
     m_VertexArray->AddVertexBuffer(vertexBuffer);
-    m_VertexArray->SetIndexBuffer(indexBuffer);
+    m_VertexArray->SetIndexBuffer(CreateRef<IndexBuffer>(indices.data(), indices.size()));
 }
 
 void Mesh::CollectMaterialTextureKeys(const aiMaterial* material, aiTextureType type)
 {
+    const Ref<TextureArray2D>* textureArray = nullptr;
+    uint32_t* textureIndices = nullptr;
+
+    switch (type)
+    {
+        case aiTextureType_DIFFUSE:
+            textureArray = &m_ParentModel->GetDiffuseMapArray();
+            textureIndices = &m_DiffuseTextureLayer;
+            break;
+        case aiTextureType_SPECULAR:
+            textureArray = &m_ParentModel->GetSpecularMapArray();
+            textureIndices = &m_SpecularTextureLayer;
+            break;
+        default:
+            BH_ASSERT(false, "Unknown texture type!");
+    }
+
     for (size_t i = 0; i < material->GetTextureCount(type); ++i)
     {
         aiString relativeTexturePath;
         material->GetTexture(type, i, &relativeTexturePath);
 
-        m_TextureKeys.emplace_back(relativeTexturePath.C_Str());
+        std::filesystem::path path = relativeTexturePath.C_Str();
+
+        const auto& it = std::ranges::find((*textureArray)->GetTextureKeys(), path.filename().string());
+
+        if (it == std::ranges::end((*textureArray)->GetTextureKeys()))
+            BH_ASSERT(false, "Failed to find texture in model array!");
+
+        *textureIndices = it - std::ranges::begin((*textureArray)->GetTextureKeys());
     }
 }

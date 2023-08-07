@@ -3,19 +3,20 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-Model::Model(const std::string& path)
+Model::Model(const std::filesystem::path& path)
 {
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path.c_str(),
-        aiProcess_Triangulate |
-         aiProcess_GenNormals
-    );
+    const aiScene* scene = importer.ReadFile(path.string(), 
+        aiProcess_Triangulate
+        | aiProcess_GenNormals);
 
     BH_ASSERT(scene || scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE, "Falied to load model!");
 
-    m_ModelDirectory = path.substr(0, path.find_last_of('/'));
+    m_ModelDirectory = path.parent_path();
 
     m_Meshes.reserve(scene->mNumMeshes);
+    m_DiffuseMaps.reset();
+    m_SpecularMaps.reset();
 
     CollectMaterialInfo(scene);
     CollectNodeInfo(scene->mRootNode, scene);
@@ -23,37 +24,39 @@ Model::Model(const std::string& path)
 
 void Model::CollectMaterialInfo(const aiScene* scene)
 {
-    m_Textures.reserve(scene->mNumMaterials);
+    std::unordered_set<std::filesystem::path> diffuseTextures, specularTextures;
     for (size_t i = 0; i < scene->mNumMaterials; ++i)
     {
         const aiMaterial* material = scene->mMaterials[i];
-        LoadMaterialTexture(material, TextureType::Diffuse);
-        LoadMaterialTexture(material, TextureType::Specular);
+        LoadMaterialTextures(material, aiTextureType_DIFFUSE, diffuseTextures);
+        LoadMaterialTextures(material, aiTextureType_SPECULAR, specularTextures);
+    }
+
+    if (!diffuseTextures.empty())
+    {
+        m_DiffuseMaps = CreateRef<TextureArray2D>(diffuseTextures.extract(diffuseTextures.begin()).value(), static_cast<uint32_t>(diffuseTextures.size()));
+
+        for (const auto& path : diffuseTextures)
+            m_DiffuseMaps->PushBack(path);
+    }
+
+    if (!specularTextures.empty())
+    {
+        m_SpecularMaps = CreateRef<TextureArray2D>(specularTextures.extract(specularTextures.begin()).value(), static_cast<uint32_t>(specularTextures.size()));
+
+        for (const auto& path : specularTextures)
+            m_SpecularMaps->PushBack(path);
     }
 }
 
-void Model::LoadMaterialTexture(const aiMaterial* material, TextureType type)
+void Model::LoadMaterialTextures(const aiMaterial* material, aiTextureType type, std::unordered_set<std::filesystem::path>& texturesSet) const
 {
-    aiTextureType aiType = aiTextureType_NONE;
-    switch (type)
-    {
-        case TextureType::Diffuse:   aiType = aiTextureType_DIFFUSE; break;
-        case TextureType::Specular:  aiType = aiTextureType_SPECULAR; break;
-        case TextureType::None:
-        default: BH_ASSERT(false, "Unknown texture type!");
-    }
-
-    for (size_t i = 0; i < material->GetTextureCount(aiType); ++i)
+    for (size_t i = 0; i < material->GetTextureCount(type); ++i)
     {
         aiString relativeTexturePath;
-        material->GetTexture(aiType, i, &relativeTexturePath);
-        const std::string absoluteTexturePath = m_ModelDirectory + '/' + std::string(relativeTexturePath.C_Str());
+        material->GetTexture(type, i, &relativeTexturePath);
 
-        if (!m_Textures.contains(absoluteTexturePath))
-        {
-            m_Textures.emplace(relativeTexturePath.C_Str(),
-                std::make_pair(CreateRef<Texture2D>(absoluteTexturePath), type));
-        }
+        texturesSet.emplace(m_ModelDirectory / relativeTexturePath.C_Str());
     }
 }
 
@@ -62,7 +65,7 @@ void Model::CollectNodeInfo(const aiNode* node, const aiScene* scene)
     for (size_t i = 0; i < node->mNumMeshes; ++i)
     {
         const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        m_Meshes.emplace_back(CreateRef<Mesh>(mesh, scene));
+        m_Meshes.emplace_back(CreateRef<Mesh>(mesh, scene, this));
     }
 
     for (size_t i = 0; i < node->mNumChildren; ++i)

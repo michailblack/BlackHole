@@ -6,6 +6,7 @@ class Context
 {
 public:
     Context(GLFWwindow* window);
+    ~Context() = default;
 
     void Init();
     void SwapBuffers();
