@@ -1,6 +1,6 @@
 #type vertex
 #version 460 core
-layout (location = 0) in vec3 a_Pos;
+layout (location = 0) in vec3 a_Position;
 
 out vec3 v_TexCoords;
 
@@ -12,8 +12,8 @@ layout (std140, binding = 0) uniform Matrices
 
 void main()
 {
-	v_TexCoords = a_Pos;
-	gl_Position = (u_Projection * mat4(mat3(u_View)) * vec4(a_Pos, 1.0)).xyww;
+	v_TexCoords = a_Position;
+	gl_Position = (u_Projection * mat4(mat3(u_View)) * vec4(a_Position, 1.0)).xyww;
 }
 
 #type fragment

@@ -46,8 +46,6 @@ The plan for Black Hole right now is to implement the necessary features and too
 
 ### Short term features to implement:
 
-- Blinn-Phong lighting model
-- Gamma correction
 - Shadow mapping
 - Normal mapping
 - Parallax mapping
@@ -55,12 +53,11 @@ The plan for Black Hole right now is to implement the necessary features and too
 - Bloom
 - Deferred shading
 - SSAO
-- Material system
 
 ***
 
 ## Known Issues
 
-- Cube maps uploading failure on various systems
-- Imgui windows layout mess on first run after cloning the repository
-- Imgui and BlackHole events dispatching conflicts when trying to control Viewport camera via mouse (will investigate this later, when we have complete ECS and Editor/Game distinction)
+- Cube maps uploading failure on some hardware
+- ImGui windows layout mess on first run after cloning the repository
+- ImGui and BlackHole events dispatching conflicts when trying to control Viewport camera via mouse (will investigate this later, when we have complete ECS)
