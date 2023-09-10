@@ -8,7 +8,7 @@
 
 // Texture2D
 
-Texture2D::Texture2D(const std::filesystem::path& texturePath)
+Texture2D::Texture2D(const std::filesystem::path& texturePath, bool useGammaCorrection)
     : m_RendererID(0)
 {
     int width, height, channels;
@@ -33,11 +33,17 @@ Texture2D::Texture2D(const std::filesystem::path& texturePath)
             dataFormat = GL_RG;
             break;
         case 3:
-            internalFormat = GL_RGB8;
+            if (!useGammaCorrection)
+                internalFormat = GL_RGB8;
+            else
+                internalFormat = GL_SRGB8;
             dataFormat = GL_RGB;
             break;
         case 4:
-            internalFormat = GL_RGBA8;
+            if (!useGammaCorrection)
+                internalFormat = GL_RGBA8;
+            else
+                internalFormat = GL_SRGB8_ALPHA8;
             dataFormat = GL_RGBA;
             break;
         }
@@ -46,6 +52,7 @@ Texture2D::Texture2D(const std::filesystem::path& texturePath)
 
         m_InternalFormat = internalFormat;
         m_DataFormat = dataFormat;
+        m_NeedToBeGammaCorrected = useGammaCorrection;
 
         glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
         glTextureStorage2D(m_RendererID, static_cast<int32_t>(glm::log2(static_cast<float>(glm::max(m_Width, m_Height))) + 1), m_InternalFormat, static_cast<int32_t>(m_Width), static_cast<int32_t>(m_Height));
@@ -76,7 +83,7 @@ void Texture2D::Bind(uint32_t slot) const
 
 // Texture2D Array
 
-TextureArray2D::TextureArray2D(const std::filesystem::path& texturePath, uint32_t layers)
+TextureArray2D::TextureArray2D(const std::filesystem::path& texturePath, uint32_t layers, bool useGammaCorrection)
     : m_RendererID(0)
 {
     m_TextureKeys.reserve(layers);
@@ -104,11 +111,17 @@ TextureArray2D::TextureArray2D(const std::filesystem::path& texturePath, uint32_
             dataFormat = GL_RG;
             break;
         case 3:
-            internalFormat = GL_RGB8;
+            if (!useGammaCorrection)
+                internalFormat = GL_RGB8;
+            else
+                internalFormat = GL_SRGB8;
             dataFormat = GL_RGB;
             break;
         case 4:
-            internalFormat = GL_RGBA8;
+            if (!useGammaCorrection)
+                internalFormat = GL_RGBA8;
+            else
+                internalFormat = GL_SRGB8_ALPHA8;
             dataFormat = GL_RGBA;
             break;
         }
@@ -117,6 +130,7 @@ TextureArray2D::TextureArray2D(const std::filesystem::path& texturePath, uint32_
 
         m_InternalFormat = internalFormat;
         m_DataFormat = dataFormat;
+        m_NeedToBeGammaCorrected = useGammaCorrection;
 
         glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &m_RendererID);
         glTextureStorage3D(m_RendererID, static_cast<int32_t>(glm::log2(static_cast<float>(glm::max(m_Width, m_Height))) + 1), m_InternalFormat, static_cast<int32_t>(m_Width), static_cast<int32_t>(m_Height), static_cast<int32_t>(layers));

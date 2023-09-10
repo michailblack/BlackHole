@@ -9,8 +9,9 @@
 struct Vertex
 {
     glm::vec3 Position;
-    glm::vec3 Normal; 
+    glm::vec3 Normal;
     glm::vec2 TexCoord;
+    glm::vec3 Tangent;
 };
 
 class Model;
@@ -22,6 +23,8 @@ public:
 
     uint32_t GetDiffuseTextureLayer() const { return m_DiffuseTextureLayer; }
     uint32_t GetSpecularTextureLayer() const { return m_SpecularTextureLayer; }
+    uint32_t GetNormalLayer() const { return m_NormalTextureLayer; }
+    uint32_t GetDisplacementLayer() const { return m_DisplacementTextureLayer; }
 
     const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
 
@@ -40,5 +43,5 @@ private:
     uint32_t m_LineIndicesCount;
     uint32_t m_TriangleIndicesCount;
 
-    uint32_t m_DiffuseTextureLayer, m_SpecularTextureLayer;
+    uint32_t m_DiffuseTextureLayer, m_SpecularTextureLayer, m_NormalTextureLayer, m_DisplacementTextureLayer;
 };

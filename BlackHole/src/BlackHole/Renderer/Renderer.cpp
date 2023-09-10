@@ -13,11 +13,11 @@ struct RendererData
 {
     Ref<UniformBuffer> MatricesUniformBuffer;
 
-    Ref<Shader> ModelShader;
+    ::ShaderLibrary ShaderLibrary;
 
-    Ref<Shader> SkyboxShader;
-    Ref<VertexArray> SkyboxVertexArray;
-    Ref<Cubemap> SkyboxCubemap;
+    //Ref<VertexArray> SkyboxVAO;
+    //Ref<Cubemap> SkyboxCubemap;
+    Ref<VertexArray> ScreenSquadVAO;
 
     Renderer::Statistics Stats;
 } static s_Data;
@@ -30,27 +30,25 @@ void Renderer::Init()
     modelShaderSpec.VertexPath = Filesystem::GetShadersPath() / "model.vs.glsl";
     modelShaderSpec.FragmentPath = Filesystem::GetShadersPath() / "model.fs.glsl";
 
-    s_Data.ModelShader = CreateRef<Shader>("Model", modelShaderSpec);
-    s_Data.ModelShader->UploadInt("u_Material.Diffuse", 0);
-    s_Data.ModelShader->UploadInt("u_Material.Specular", 0);
-    s_Data.ModelShader->UploadFloat3("u_DirectionalLight.Direction", glm::vec3(0.0f, -1.0f, 0.0f));
-    s_Data.ModelShader->UploadFloat3("u_DirectionalLight.Diffuse"  , glm::vec3(0.5f));
-    s_Data.ModelShader->UploadFloat3("u_DirectionalLight.Specular" , glm::vec3(0.8f));
-    s_Data.ModelShader->UploadFloat("u_Material.Shininess", 32.0f);
+    s_Data.ShaderLibrary.Load("Model", modelShaderSpec);
+    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Diffuse", 0);
+    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Specular", 1);
+    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Normal", 2);
+    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Displacement", 3);
 
     CubemapSpecification cbSpec;
-    cbSpec.Right  = Filesystem::GetTexturesPath() / "skyboxes/space/blue/right.png";
-    cbSpec.Left   = Filesystem::GetTexturesPath() / "skyboxes/space/blue/left.png";
-    cbSpec.Top    = Filesystem::GetTexturesPath() / "skyboxes/space/blue/top.png";
-    cbSpec.Bottom = Filesystem::GetTexturesPath() / "skyboxes/space/blue/bottom.png";
-    cbSpec.Front  = Filesystem::GetTexturesPath() / "skyboxes/space/blue/front.png";
-    cbSpec.Back   = Filesystem::GetTexturesPath() / "skyboxes/space/blue/back.png";
+    cbSpec.Right  = Filesystem::GetTexturesPath() / "skyboxes/mountains/right.jpg";
+    cbSpec.Left   = Filesystem::GetTexturesPath() / "skyboxes/mountains/left.jpg";
+    cbSpec.Top    = Filesystem::GetTexturesPath() / "skyboxes/mountains/top.jpg";
+    cbSpec.Bottom = Filesystem::GetTexturesPath() / "skyboxes/mountains/bottom.jpg";
+    cbSpec.Front  = Filesystem::GetTexturesPath() / "skyboxes/mountains/front.jpg";
+    cbSpec.Back   = Filesystem::GetTexturesPath() / "skyboxes/mountains/back.jpg";
 
-    s_Data.SkyboxShader = CreateRef<Shader>(Filesystem::GetShadersPath() / "skybox.glsl");
+    /*s_Data.ShaderLibrary.Load(Filesystem::GetShadersPath() / "skybox.glsl");
     s_Data.SkyboxCubemap = CreateRef<Cubemap>(cbSpec);
     s_Data.SkyboxCubemap->Bind();
 
-    s_Data.SkyboxVertexArray = CreateRef<VertexArray>();
+    s_Data.SkyboxVAO = CreateRef<VertexArray>();
     {
         float vertices[] = {
             -0.5f, -0.5f,  0.5f,
@@ -90,13 +88,43 @@ void Renderer::Init()
         });
         const auto& skyboxIndexBuffer = CreateRef<IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
 
-        s_Data.SkyboxVertexArray->AddVertexBuffer(skyboxVertexBuffer);
-        s_Data.SkyboxVertexArray->SetIndexBuffer(skyboxIndexBuffer);
-    }
+        s_Data.SkyboxVAO->AddVertexBuffer(skyboxVertexBuffer);
+        s_Data.SkyboxVAO->SetIndexBuffer(skyboxIndexBuffer);
+    }*/
+
+    s_Data.ScreenSquadVAO = CreateRef<VertexArray>();
+	{
+	    float vertices[] = {
+			-1.0f, -1.0f,	0.0f, 0.0f,
+			 1.0f, -1.0f,	1.0f, 0.0f,
+			 1.0f,  1.0f,	1.0f, 1.0f,
+
+			 1.0f,  1.0f,	1.0f, 1.0f,
+	        -1.0f,  1.0f,	0.0f, 1.0f,
+	        -1.0f, -1.0f,	0.0f, 0.0f,
+	    };
+
+	    auto vbo = CreateRef<VertexBuffer>(sizeof(vertices) * sizeof(float), vertices);
+		vbo->SetLayout({
+			{ ShaderDataType::Float2, "a_Position" },
+			{ ShaderDataType::Float2, "a_TexCoord" }
+		});
+		s_Data.ScreenSquadVAO->AddVertexBuffer(vbo);
+	}
 }
 
 void Renderer::Shutdown()
 {
+}
+
+void Renderer::ClearColor(const glm::vec4& color)
+{
+    glClearColor(color.r, color.g, color.b, color.a);
+}
+
+void Renderer::Clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void Renderer::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -118,7 +146,17 @@ void Renderer::EndScene()
 
 void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
 {
-    model->GetDiffuseMapArray()->Bind();
+    if (model->GetDiffuseMapArray().get())
+        model->GetDiffuseMapArray()->Bind();
+
+    if (model->GetSpecularMapArray().get())
+        model->GetSpecularMapArray()->Bind(1);
+
+    if (model->GetNormalMapArray().get())
+        model->GetNormalMapArray()->Bind(2);
+
+    if (model->GetDisplacementMapArray().get())
+        model->GetDisplacementMapArray()->Bind(3);
 
     for (const auto& mesh : model->GetMeshes())
     {
@@ -127,11 +165,11 @@ void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
         const uint32_t lineIndicesCount = mesh->GetLineIndicesCount();
         const uint32_t triangleIndicesCount = mesh->GetTriangleIndicesCount();
 
-        s_Data.ModelShader->UploadMat4("u_Model", transform);
-        s_Data.ModelShader->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
-        s_Data.ModelShader->UploadUint("u_Material.SpecularLayer", mesh->GetSpecularTextureLayer());
+        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
+        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.SpecularLayer", mesh->GetSpecularTextureLayer());
+        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.NormalLayer", mesh->GetNormalLayer());
+        //s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.DisplacementLayer", mesh->GetDisplacementLayer());
 
-        s_Data.ModelShader->Bind();
         vertexArray->Bind();
         if (pointIndicesCount)
         {
@@ -172,11 +210,19 @@ void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
     }
 }
 
-void Renderer::DrawSkybox()
+void Renderer::RenderScreenQuad(const std::initializer_list<uint32_t>& textureIDs)
 {
-    s_Data.SkyboxShader->Bind();
-    s_Data.SkyboxVertexArray->Bind();
-    glDrawElements(GL_TRIANGLES, static_cast<int32_t>(s_Data.SkyboxVertexArray->GetIndexBuffer()->GetCount()), GL_UNSIGNED_INT, nullptr);
+    uint32_t i = 0;
+    for (const uint32_t textureID : textureIDs)
+        glBindTextureUnit(i++, textureID);
+
+    s_Data.ScreenSquadVAO->Bind();
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+}
+
+ShaderLibrary& Renderer::GetShaderLibrary()
+{
+    return s_Data.ShaderLibrary;
 }
 
 void Renderer::ResetStats()

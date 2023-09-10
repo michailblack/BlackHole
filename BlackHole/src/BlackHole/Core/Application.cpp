@@ -2,11 +2,9 @@
 #include "BlackHole/Core/Application.h"
 
 #include "BlackHole/Renderer/Renderer.h"
+#include "Platform/OpenGL/Framebuffer.h"
 
 #include <GLFW/glfw3.h>
-#include <stb_image.h>
-
-#include "Platform/OpenGL/Framebuffer.h"
 
 Application* Application::s_Instance = nullptr;
 
@@ -15,8 +13,6 @@ Application::Application(const ApplicationSpecification& specification)
 {
     BH_ASSERT(!s_Instance, "Application already exists!");
     s_Instance = this;
-
-    stbi_set_flip_vertically_on_load(true);
 
     if (!specification.WorkingDirectory.empty())
         std::filesystem::current_path(specification.WorkingDirectory);
@@ -47,8 +43,8 @@ void Application::Run()
         const Timestep ts = time - m_LastFrameTime;
         m_LastFrameTime = time;
 
-        Framebuffer::ClearDefaultFramebufferColorAttachment({ 0.2f, 0.2f, 0.2f, 1.0f});
-        Framebuffer::ClearDefaultFramebufferDepthStencilAttachment();
+        Renderer::ClearColor({ 0.2f, 0.2f, 0.2f, 1.0f});
+        Renderer::Clear();
 
         for (Layer* layer : m_LayerStack)
             layer->OnUpdate(ts);
@@ -65,7 +61,6 @@ void Application::Run()
 void Application::OnEvent(Event& e)
 {
     EventDispatcher dispatcher(e);
-    dispatcher.Dispatch<KeyPressedEvent>(BH_BIND_EVENT_FN(OnKeyPressed));
     dispatcher.Dispatch<WindowCloseEvent>(BH_BIND_EVENT_FN(OnWindowClose));
     dispatcher.Dispatch<WindowResizeEvent>(BH_BIND_EVENT_FN(OnWindowResize));
 
@@ -99,17 +94,5 @@ bool Application::OnWindowClose(WindowCloseEvent& e)
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
     Renderer::SetViewport(0, 0, e.GetWidth(), e.GetHeight());
-    return true;
-}
-
-bool Application::OnKeyPressed(KeyPressedEvent& e)
-{
-    switch (e.GetKeyCode())
-    {
-    case GLFW_KEY_F11:
-        m_Window->SetFullscreen(!m_Window->IsFullscreen());
-        break;
-    }
-
     return true;
 }

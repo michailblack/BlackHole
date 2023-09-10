@@ -29,7 +29,7 @@ void Filesystem::Init()
         workingDir = workingDir.parent_path();
     }
 
-    BH_LOG_INFO("Found Assets path: {0}", s_Data.AssetsPath.string());
+    BH_LOG_INFO("[Filesystem] Found Assets path: {0}", s_Data.AssetsPath.string());
 
     s_Data.ModelsPath = s_Data.AssetsPath / "models";
     s_Data.ShadersPath = s_Data.AssetsPath / "shaders";

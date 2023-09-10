@@ -13,16 +13,67 @@ EditorLayer::EditorLayer()
 
 void EditorLayer::OnAttach()
 {
-    m_Model = CreateRef<Model>(Filesystem::GetModelsPath() / "BarberShopChair_01_8k/BarberShopChair_01_8k.fbx");
+	FramebufferSpecification fbSpec;
+	fbSpec.Width = Application::Get().GetWindow().GetWidth();
+	fbSpec.Height = Application::Get().GetWindow().GetHeight();
+	fbSpec.Attachments = {
+		{
+		    FramebufferTextureFormat::RGBA8,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		},
+		{
+		    FramebufferTextureFormat::DEPTH24STENCIL8,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		}
+	};
+	m_ViewportFBO = CreateRef<Framebuffer>(fbSpec);
 
-    FramebufferSpecification fbSpec;
-    fbSpec.Width = Application::Get().GetWindow().GetWidth();
-    fbSpec.Height = Application::Get().GetWindow().GetHeight();
-    fbSpec.Samples = 4;
-    m_FramebufferMSAA = CreateRef<Framebuffer>(fbSpec);
+	fbSpec.Attachments = {
+		{
+		    FramebufferTextureFormat::RGBA16F,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		},
+		{
+		    FramebufferTextureFormat::RGBA16F,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		},
+		{
+		    FramebufferTextureFormat::RGBA16F,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		},
+		{
+		    FramebufferTextureFormat::DEPTH24,
+			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
+			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+		}
+	};
+	m_GBufferFBO = CreateRef<Framebuffer>(fbSpec);
 
-	fbSpec.Samples = 1;
-	m_Framebuffer = CreateRef<Framebuffer>(fbSpec);
+	m_Model = CreateRef<Model>(Filesystem::GetModelsPath() / "primitives/cube/cube.obj");
+
+	ShaderSpecification shSpec;
+	shSpec.VertexPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.vs.glsl";
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.fs.glsl";
+	Renderer::GetShaderLibrary().Load("Geometry", shSpec);
+
+	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightningPass.fs.glsl";
+	Renderer::GetShaderLibrary().Load("Lightning", shSpec);
+	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_Position", 0);
+	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_Normal", 1);
+	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_AlbedoSpec", 2);
+
+	m_PointLights = CreateRef<UniformBuffer>(3 * 4 * sizeof(float), 1);
+	auto* const mapPointLights = static_cast<glm::vec4*>(m_PointLights->Map(0, 2 * sizeof(float)));
+	*mapPointLights = glm::vec4(-1.0f, 0.0f, -1.0f, 0.0f);
+	*(mapPointLights + 1) = glm::vec4(0.0f, 100.0f, 100.0f, 0.0f);
+	*(mapPointLights + 2) = glm::vec4(0.7f, 1.8f, 0.0f, 0.0f);
+	m_PointLights->Unmap();
 }
 
 void EditorLayer::OnDetach()
@@ -31,41 +82,50 @@ void EditorLayer::OnDetach()
 
 void EditorLayer::OnUpdate(Timestep ts)
 {
-    m_FPS = 1.0f / ts;
+	m_FrameTime = ts;
 
     if (m_ViewportFocused)
 		m_CameraController.OnUpdate(ts);
 
-    // Resize
-    const FramebufferSpecification& spec = m_FramebufferMSAA->GetSpecification();
+	const auto& shaderLib = Renderer::GetShaderLibrary();
+
+	// Resize
+    const FramebufferSpecification& spec = m_ViewportFBO->GetSpecification();
 	if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f
 		&& (spec.Width != static_cast<uint32_t>(m_ViewportSize.x) || spec.Height != static_cast<uint32_t>(m_ViewportSize.y)))
 	{
-		m_FramebufferMSAA->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
-		m_Framebuffer->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+		m_ViewportFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+		m_GBufferFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
 		m_CameraController.OnResize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
 	}
 
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), m_ModelScale);
-	model = glm::rotate(model, glm::radians(m_ModelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(m_ModelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(m_ModelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::translate(model, m_ModelTranslation);
-
-    m_FramebufferMSAA->Bind();
-    m_FramebufferMSAA->ClearColorAttachment({ 0.2f, 0.2f, 0.2f, 1.0f });
-    m_FramebufferMSAA->ClearDepthAttachment();
-
 	Renderer::ResetStats();
 
-    Renderer::BeginScene(m_CameraController.GetCamera());
-    Renderer::Submit(m_Model, model);
-    Renderer::DrawSkybox();
-    Renderer::EndScene();
+	// Geometry path
+	{
+	    m_GBufferFBO->Bind();
+		Renderer::Clear();
 
-    m_FramebufferMSAA->Unbind();
+		Renderer::BeginScene(m_CameraController.GetCamera());
+		shaderLib.Get("Geometry")->Bind();
+		shaderLib.Get("Geometry")->UploadMat4("u_Model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
+		Renderer::Submit(m_Model);
+		Renderer::EndScene();
 
-	m_Framebuffer->BlitFramebuffer(m_FramebufferMSAA);
+		m_GBufferFBO->Unbind();
+	}
+
+	// Lightning path
+    {
+        m_ViewportFBO->Bind();
+	    Renderer::Clear();
+
+		shaderLib.Get("Lightning")->Bind();
+		shaderLib.Get("Lightning")->UploadFloat3("u_CameraPos", m_CameraController.GetCamera().GetPosition());
+		Renderer::RenderScreenQuad({ m_GBufferFBO->GetColorAttachmentRendererID(), m_GBufferFBO->GetColorAttachmentRendererID(1), m_GBufferFBO->GetColorAttachmentRendererID(2) });
+
+	    m_ViewportFBO->Unbind();
+    }
 }
 
 void EditorLayer::OnImGuiRender()
@@ -129,13 +189,13 @@ void EditorLayer::OnImGuiRender()
 
     Application::Get().GetImGuiLayer()->BlockEvents(!viewportIsReadyForInteraction);
 
-	const uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-	ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2( m_ViewportSize.x, m_ViewportSize.y ), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+    const uint64_t textureID = m_ViewportFBO->GetColorAttachmentRendererID();
+    ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2( m_ViewportSize.x, m_ViewportSize.y ), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
     ImGui::End();
 
-	ImGui::Begin("Stats");
+    ImGui::Begin("Stats");
     const auto stats = Renderer::GetStats();
-    ImGui::Text("FPS: %f", m_FPS);
+    ImGui::Text("Frame time: %f s", m_FrameTime);
 	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 	ImGui::Text("Triangles: %d", stats.TriangleCount);
 	ImGui::Text("Lines: %d", stats.LinesCount);
@@ -144,11 +204,19 @@ void EditorLayer::OnImGuiRender()
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
     ImGui::End();
 
-	ImGui::Begin("Properties");
-	ImGui::DragFloat3("Translation", glm::value_ptr(m_ModelTranslation), 0.1f);
-	ImGui::DragFloat3("Rotation", glm::value_ptr(m_ModelRotation), 1.0f, -180.0f, 180.0f);
-	ImGui::DragFloat3("Scale", glm::value_ptr(m_ModelScale), 0.01f, 0.1f, 10.0f);
+	/*const auto& shaderLibrary = Renderer::GetShaderLibrary();
+	ImGui::Begin("Light Properties");
+	ImGui::DragFloat3("Direction", glm::value_ptr(m_LightDirection), 0.01f);
+	ImGui::ColorEdit3("Diffuse", glm::value_ptr(m_LightDiffuse));
+	ImGui::ColorEdit3("Specular", glm::value_ptr(m_LightSpecular));
+	ImGui::DragFloat2("Width", glm::value_ptr(m_OrthoWidth));
+	ImGui::DragFloat2("Height", glm::value_ptr(m_OrthoHeight));
+	ImGui::DragFloat2("Depth", glm::value_ptr(m_OrthoDepth));
 	ImGui::End();
+
+	shaderLibrary.Get("Model")->UploadFloat3("u_LightDirection", m_LightDirection);
+    shaderLibrary.Get("Model")->UploadFloat3("u_DirectionalLight.Diffuse"  , m_LightDiffuse);
+    shaderLibrary.Get("Model")->UploadFloat3("u_DirectionalLight.Specular" , m_LightSpecular);*/
 
 	ImGui::End();
 }

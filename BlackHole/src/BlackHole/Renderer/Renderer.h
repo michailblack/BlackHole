@@ -1,12 +1,16 @@
 #pragma once
 #include "BlackHole/Renderer/Camera.h"
 #include "BlackHole/Renderer/Model.h"
+#include "Platform/OpenGL/Shader.h"
 
 class Renderer
 {
 public:
     static void Init();
     static void Shutdown();
+
+    static void ClearColor(const glm::vec4& color);
+    static void Clear();
 
     static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
@@ -15,7 +19,9 @@ public:
 
     static void Submit(const Ref<Model>& model, const glm::mat4& transform = glm::mat4(1.0f));
 
-    static void DrawSkybox();
+    static void RenderScreenQuad(const std::initializer_list<uint32_t>& textureIDs = {});
+
+    static ShaderLibrary& GetShaderLibrary();
 
     // Stats
     struct Statistics

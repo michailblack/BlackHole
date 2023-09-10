@@ -5,9 +5,6 @@
 ## Ignored assets
 assets/ignored
 
-## Dear ImGui artifacts
-imgui.ini
-
 ## Visual Studio artifacts and projects
 .vs
 ipch

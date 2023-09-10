@@ -14,6 +14,8 @@ public:
     const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
     const Ref<TextureArray2D>& GetDiffuseMapArray() const { return m_DiffuseMaps; }
     const Ref<TextureArray2D>& GetSpecularMapArray() const { return m_SpecularMaps; }
+    const Ref<TextureArray2D>& GetNormalMapArray() const { return m_NormalMaps; }
+    const Ref<TextureArray2D>& GetDisplacementMapArray() const { return m_DisplacementMaps; }
 private:
     void CollectMaterialInfo(const aiScene* scene);
     void LoadMaterialTextures(const aiMaterial* material, aiTextureType type, std::unordered_set<std::filesystem::path>& texturesSet) const;
@@ -22,5 +24,7 @@ private:
     std::vector<Ref<Mesh>> m_Meshes;
     Ref<TextureArray2D> m_DiffuseMaps;
     Ref<TextureArray2D> m_SpecularMaps;
+    Ref<TextureArray2D> m_NormalMaps;
+    Ref<TextureArray2D> m_DisplacementMaps;
     std::filesystem::path m_ModelDirectory;
 };

@@ -13,17 +13,18 @@ public:
     void OnImGuiRender() override;
     void OnEvent(Event& e) override;
 private:
-    PerspectiveCameraController m_CameraController;
-    Ref<Framebuffer> m_FramebufferMSAA;
-    Ref<Framebuffer> m_Framebuffer;
-    Ref<Model> m_Model;
-    glm::vec3 m_ModelTranslation = glm::vec3(0.0f);
-    glm::vec3 m_ModelRotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-    glm::vec3 m_ModelScale = glm::vec3(1.0f);
+    Ref<Framebuffer> m_ViewportFBO;
+    Ref<Framebuffer> m_GBufferFBO;
 
-    float m_FPS;
+    Ref<UniformBuffer> m_PointLights;
+
+    PerspectiveCameraController m_CameraController;
+
+    Ref<Model> m_Model;
 
     bool m_ViewportFocused = false;
     bool m_ViewportHovered = false;
     glm::vec2 m_ViewportSize;
+
+    float m_FrameTime;
 };

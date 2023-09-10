@@ -11,7 +11,7 @@ static bool gs_GLFWInitialized = false;
 
 static void GLFWErrorCallback(int error, const char* description)
 {
-    BH_LOG_ERROR("GLFW Error ({0}): {1}", error, description);
+    BH_LOG_ERROR("[GLFW] Error ({0}): {1}", error, description);
 }
 
 Window::Window(const WindowProps& props)
@@ -72,7 +72,7 @@ void Window::Init(const WindowProps& props)
     m_Data.Height = props.Height;
     m_Data.IsFullscreen = false;
 
-    BH_LOG_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+    BH_LOG_INFO("[Window] Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
 
     if (!gs_GLFWInitialized)
     {

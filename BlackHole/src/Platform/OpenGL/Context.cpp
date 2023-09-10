@@ -16,8 +16,8 @@ static void APIENTRY OpenGLErrorCallback(
     // ignore non-significant error/warning codes
     if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
 
-    std::string sourceStr = "Source: ";
-    std::string typeStr   = "Type: ";
+    std::string sourceStr;
+    std::string typeStr;
     std::string msg;
 
     switch (source)
@@ -32,18 +32,19 @@ static void APIENTRY OpenGLErrorCallback(
 
     switch (type)
     {
-        case GL_DEBUG_TYPE_ERROR:               typeStr += "Error"; break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: typeStr += "Deprecated Behaviour"; break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  typeStr += "Undefined Behaviour"; break; 
-        case GL_DEBUG_TYPE_PORTABILITY:         typeStr += "Portability"; break;
-        case GL_DEBUG_TYPE_PERFORMANCE:         typeStr += "Performance"; break;
-        case GL_DEBUG_TYPE_MARKER:              typeStr += "Marker"; break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:          typeStr += "Push Group"; break;
-        case GL_DEBUG_TYPE_POP_GROUP:           typeStr += "Pop Group"; break;
-        case GL_DEBUG_TYPE_OTHER:               typeStr += "Other"; break;
+        case GL_DEBUG_TYPE_ERROR:               typeStr = "Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: typeStr = "Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  typeStr = "Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         typeStr = "Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         typeStr = "Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              typeStr = "Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          typeStr = "Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           typeStr = "Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               typeStr = "Other"; break;
     }
 
-    msg = "[OpenGL] " + sourceStr + "; " + typeStr + "\nMessage: " + message;
+    //msg = "[OpenGL] " + sourceStr + "; " + typeStr + "\nMessage: " + message;
+    msg = "[OpenGL] " + typeStr + " in " + sourceStr + ":\n" + message;
 
     switch (severity)
     {
@@ -71,10 +72,9 @@ void Context::Init()
 
     glEnable(GL_STENCIL_TEST);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_MULTISAMPLE);
 

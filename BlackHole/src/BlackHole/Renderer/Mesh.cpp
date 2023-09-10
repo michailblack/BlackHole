@@ -14,6 +14,8 @@ Mesh::Mesh(const aiMesh* mesh, const aiScene* scene, const Model* parentModel)
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         CollectMaterialTextureKeys(material, aiTextureType_DIFFUSE);
         CollectMaterialTextureKeys(material, aiTextureType_SPECULAR);
+        CollectMaterialTextureKeys(material, aiTextureType_NORMALS);
+        CollectMaterialTextureKeys(material, aiTextureType_DISPLACEMENT);
     }
 }
 
@@ -35,6 +37,13 @@ void Mesh::CollectMeshInfo(const aiMesh* mesh)
             vertex.Normal.x = mesh->mNormals[i].x;
             vertex.Normal.y = mesh->mNormals[i].y;
             vertex.Normal.z = mesh->mNormals[i].z;
+        }
+
+        if (mesh->HasTangentsAndBitangents())
+        {
+            vertex.Tangent.x = mesh->mTangents[i].x;
+            vertex.Tangent.y = mesh->mTangents[i].y;
+            vertex.Tangent.z = mesh->mTangents[i].z;
         }
 
         if (mesh->HasTextureCoords(0))
@@ -84,9 +93,10 @@ void Mesh::CollectMeshInfo(const aiMesh* mesh)
     m_VertexArray = CreateRef<VertexArray>();
     const auto& vertexBuffer = CreateRef<VertexBuffer>(vertices.size() * sizeof(Vertex), reinterpret_cast<const float*>(vertices.data()));
     vertexBuffer->SetLayout({
-        { ShaderDataType::Float3, "a_Position" },
-        { ShaderDataType::Float3, "a_Normal"   },
-        { ShaderDataType::Float2, "a_TexCoord" }
+        { ShaderDataType::Float3, "a_Position"  },
+        { ShaderDataType::Float3, "a_Normal"    },
+        { ShaderDataType::Float2, "a_TexCoord"  },
+        { ShaderDataType::Float3, "a_Tangent"   }
     });
     m_VertexArray->AddVertexBuffer(vertexBuffer);
     m_VertexArray->SetIndexBuffer(CreateRef<IndexBuffer>(indices.data(), indices.size()));
@@ -107,8 +117,15 @@ void Mesh::CollectMaterialTextureKeys(const aiMaterial* material, aiTextureType 
             textureArray = &m_ParentModel->GetSpecularMapArray();
             textureIndices = &m_SpecularTextureLayer;
             break;
-        default:
-            BH_ASSERT(false, "Unknown texture type!");
+        case aiTextureType_NORMALS:
+            textureArray = &m_ParentModel->GetNormalMapArray();
+            textureIndices = &m_NormalTextureLayer;
+            break;
+        case aiTextureType_DISPLACEMENT:
+            textureArray = &m_ParentModel->GetDisplacementMapArray();
+            textureIndices = &m_DisplacementTextureLayer;
+            break;
+        default: BH_ASSERT(false, "Unknown texture type!"); return;
     }
 
     for (size_t i = 0; i < material->GetTextureCount(type); ++i)

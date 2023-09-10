@@ -72,18 +72,18 @@ Shader::Shader(const std::filesystem::path& filepath)
     m_Name = filepath.filename().stem().string();
 }
 
-Shader::Shader(std::string name, const ShaderSpecification& spec)
+Shader::Shader(std::string name, const ShaderSpecification& specification)
     : m_RendererID(0)
     , m_Name(std::move(name))
 {
-    BH_ASSERT(spec.VertexPath.has_filename(), "Can't create shade without Vertex Shader!");
-    BH_ASSERT(spec.FragmentPath.has_filename(), "Can't create shade without Fragment Shader!");
+    BH_ASSERT(specification.VertexPath.has_filename(), "Can't create shade without Vertex Shader!");
+    BH_ASSERT(specification.FragmentPath.has_filename(), "Can't create shade without Fragment Shader!");
 
-    m_ShaderSourceCode[GL_VERTEX_SHADER]   = Utils::ReadFile(spec.VertexPath.string());
-    m_ShaderSourceCode[GL_FRAGMENT_SHADER] = Utils::ReadFile(spec.FragmentPath.string());
+    m_ShaderSourceCode[GL_VERTEX_SHADER]   = Utils::ReadFile(specification.VertexPath.string());
+    m_ShaderSourceCode[GL_FRAGMENT_SHADER] = Utils::ReadFile(specification.FragmentPath.string());
 
-    if (spec.GeometryPath.has_filename())
-        m_ShaderSourceCode[GL_GEOMETRY_SHADER] = Utils::ReadFile(spec.GeometryPath.string());
+    if (specification.GeometryPath.has_filename())
+        m_ShaderSourceCode[GL_GEOMETRY_SHADER] = Utils::ReadFile(specification.GeometryPath.string());
 
     CreateProgram();
 }
@@ -197,9 +197,10 @@ Shader::UniformInfo Shader::GetUniformInfo(const std::string& name) const
     const auto& it = m_UniformLocationCache.find(name);
     if (it != m_UniformLocationCache.end())
         return  it->second;
-    
-    const GLint location = glGetUniformLocation(m_ProgramIDs.at(GL_VERTEX_SHADER), name.data());
-    return m_UniformLocationCache[name] = { m_ProgramIDs.at(GL_VERTEX_SHADER), location, 0 };
+
+    BH_LOG_WARN("[Shader] The uniform '{0}' doesn't exist.", name);
+
+    return Shader::UniformInfo{m_ProgramIDs.at(GL_VERTEX_SHADER), -1, 0};
 }
 
 void Shader::CollectUniformLocations(uint32_t programID) const
@@ -241,7 +242,7 @@ void ShaderLibrary::Add(const Ref<Shader>& shader)
     m_Shaders[name] = shader;
 }
 
-Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+Ref<Shader> ShaderLibrary::Load(const std::filesystem::path& filepath)
 {
     const auto& shader = CreateRef<Shader>(filepath);
     Add(shader);

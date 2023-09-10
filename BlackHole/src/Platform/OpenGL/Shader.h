@@ -13,7 +13,7 @@ class Shader
 {
 public:
     explicit Shader(const std::filesystem::path& filepath);
-    explicit Shader(std::string name, const ShaderSpecification& spec);
+    explicit Shader(std::string name, const ShaderSpecification& specification);
     ~Shader();
 
     void Bind() const;
@@ -53,7 +53,7 @@ class ShaderLibrary
 public:
     void Add(const Ref<Shader>& shader);
 
-    Ref<Shader> Load(const std::string& filepath);
+    Ref<Shader> Load(const std::filesystem::path& filepath);
     Ref<Shader> Load(const std::string& name, const ShaderSpecification& spec);
 
     Ref<Shader> Get(const std::string& name) const;

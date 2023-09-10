@@ -43,7 +43,6 @@ private:
 
     bool OnWindowClose(WindowCloseEvent& e);
     bool OnWindowResize(WindowResizeEvent& e);
-    bool OnKeyPressed(KeyPressedEvent& e);
 private:
     ApplicationSpecification m_Specification;
     bool m_IsRunning = true;

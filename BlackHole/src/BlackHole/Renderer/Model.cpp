@@ -9,7 +9,8 @@ Model::Model(const std::filesystem::path& path)
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path.string(), 
         aiProcess_Triangulate
-        | aiProcess_GenNormals);
+        | aiProcess_FlipUVs
+        | aiProcess_CalcTangentSpace);
 
     BH_ASSERT(scene || scene->mRootNode || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE, "Falied to load model!");
 
@@ -25,18 +26,20 @@ Model::Model(const std::filesystem::path& path)
 
 void Model::CollectMaterialInfo(const aiScene* scene)
 {
-    std::unordered_set<std::filesystem::path> diffuseTextures, specularTextures;
+    std::unordered_set<std::filesystem::path> diffuseTextures, specularTextures, normalTextures, displacementTextures;
     for (size_t i = 0; i < scene->mNumMaterials; ++i)
     {
         const aiMaterial* material = scene->mMaterials[i];
         LoadMaterialTextures(material, aiTextureType_DIFFUSE, diffuseTextures);
         LoadMaterialTextures(material, aiTextureType_SPECULAR, specularTextures);
+        LoadMaterialTextures(material, aiTextureType_NORMALS, normalTextures);
+        LoadMaterialTextures(material, aiTextureType_DISPLACEMENT, displacementTextures);
     }
 
     if (!diffuseTextures.empty())
     {
-        m_DiffuseMaps = CreateRef<TextureArray2D>(diffuseTextures.extract(diffuseTextures.begin()).value(), static_cast<uint32_t>(diffuseTextures.size()));
-
+        m_DiffuseMaps = CreateRef<TextureArray2D>(diffuseTextures.extract(diffuseTextures.begin()).value(), static_cast<uint32_t>(diffuseTextures.size()), true);
+    
         for (const auto& path : diffuseTextures)
             m_DiffuseMaps->PushBack(path);
     }
@@ -47,6 +50,22 @@ void Model::CollectMaterialInfo(const aiScene* scene)
 
         for (const auto& path : specularTextures)
             m_SpecularMaps->PushBack(path);
+    }
+
+    if (!normalTextures.empty())
+    {
+        m_NormalMaps = CreateRef<TextureArray2D>(normalTextures.extract(normalTextures.begin()).value(), static_cast<uint32_t>(normalTextures.size()));
+
+        for (const auto& path : normalTextures)
+            m_NormalMaps->PushBack(path);
+    }
+
+    if (!displacementTextures.empty())
+    {
+        m_DisplacementMaps = CreateRef<TextureArray2D>(displacementTextures.extract(displacementTextures.begin()).value(), static_cast<uint32_t>(displacementTextures.size()));
+
+        for (const auto& path : displacementTextures)
+            m_DisplacementMaps->PushBack(path);
     }
 }
 
