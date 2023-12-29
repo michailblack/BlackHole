@@ -1,4 +1,5 @@
 #pragma once
+#include <glad/glad.h>
 #include <glm/vec4.hpp>
 
 enum class FramebufferTextureFormat
@@ -16,66 +17,61 @@ enum class FramebufferTextureFormat
     DEPTH24STENCIL8
 };
 
-enum class FramebufferTextureFilteringMethod
+enum class FramebufferTextureParameterValue
 {
     None = 0,
 
-    FILTER_MIN_TYPE_NEAREST,
-    FILTER_MAG_TYPE_NEAREST,
-    FILTER_MIN_TYPE_LINEAR,
-    FILTER_MAG_TYPE_LINEAR,
-};
+    FILTER_TYPE_NEAREST,
+    FILTER_TYPE_LINEAR,
 
-enum class FramebufferTextureWrappingMethod
-{
-    None = 0,
-
-    WRAP_S_TYPE_CLAMP_TO_EDGE,
-    WRAP_T_TYPE_CLAMP_TO_EDGE,
-    WRAP_S_TYPE_CLAMP_TO_BORDER,
-    WRAP_T_TYPE_CLAMP_TO_BORDER,
-    WRAP_S_TYPE_REPEAT,
-    WRAP_T_TYPE_REPEAT
-};
-
-enum class FramebufferTextureParameterType
-{
-    None = 0,
-
-    Int,
-    Float,
-    IntPtr,
-    FloatPtr
+    WRAP_TYPE_CLAMP_TO_EDGE,
+    WRAP_TYPE_CLAMP_TO_BORDER,
+    WRAP_TYPE_REPEAT
 };
 
 enum class FramebufferTextureParameterName
 {
     None = 0,
 
-    DepthStencilTextureMode,
-    TextureBorderColor
+    FILTER_MIN,
+    FILTER_MAG,
+
+    WRAP_S,
+    WRAP_T
 };
 
-struct FramebufferTextureFormatSpecification
+namespace Utils
 {
-    FramebufferTextureFormatSpecification() = default;
-    FramebufferTextureFormatSpecification(FramebufferTextureFormat format,
-        std::initializer_list<FramebufferTextureFilteringMethod> filtering,
-        std::initializer_list<FramebufferTextureWrappingMethod> wrapping)
-        : Format(format), Filtering(filtering), Wrapping(wrapping) {}
+    static uint32_t GetGLDataFormatFromTextureType(FramebufferTextureFormat textureFormat)
+    {
+        switch (textureFormat)
+        {
+            case FramebufferTextureFormat::RGBA8:
+            case FramebufferTextureFormat::RGBA16F: return GL_RGBA;
+            case FramebufferTextureFormat::None:
+            default: BH_ASSERT(false, "Unknown texture format!"); return 0;
+        }
+    }
+}
+
+struct FramebufferTextureAttachmentSpecification
+{
+    FramebufferTextureAttachmentSpecification() = default;
+    FramebufferTextureAttachmentSpecification(FramebufferTextureFormat format,
+        std::initializer_list<std::pair<FramebufferTextureParameterName, FramebufferTextureParameterValue>> parameters)
+        : Format(format), Parameters(parameters) {}
 
     FramebufferTextureFormat Format = FramebufferTextureFormat::None;
-    std::vector<FramebufferTextureFilteringMethod> Filtering;
-    std::vector<FramebufferTextureWrappingMethod> Wrapping;
+    std::vector<std::pair<FramebufferTextureParameterName, FramebufferTextureParameterValue>> Parameters;
 };
 
 struct FramebufferAttachmentSpecification
 {
     FramebufferAttachmentSpecification() = default;
-    FramebufferAttachmentSpecification(std::initializer_list<FramebufferTextureFormatSpecification> attachments)
-        : Attachments(attachments) {}
+    FramebufferAttachmentSpecification(std::initializer_list<FramebufferTextureAttachmentSpecification> textureSpecs)
+        : TextureAttachments(textureSpecs) {}
 
-    std::vector<FramebufferTextureFormatSpecification> Attachments;
+    std::vector<FramebufferTextureAttachmentSpecification> TextureAttachments;
 };
 
 struct FramebufferSpecification
@@ -88,7 +84,7 @@ struct FramebufferSpecification
 class Framebuffer
 {
 public:
-    Framebuffer(const FramebufferSpecification& specification);
+    Framebuffer(FramebufferSpecification specification);
     ~Framebuffer();
 
     void Invalidate();
@@ -99,17 +95,35 @@ public:
     void Resize(uint32_t width, uint32_t height);
     void BlitFramebuffer(const Ref<Framebuffer>& framebuffer) const;
 
-    uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const { BH_ASSERT(index < m_ColorAttachments.size(), "Color attachment index out of range!"); return m_ColorAttachments[index]; }
+    uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const
+    {
+        BH_ASSERT(index < m_ColorAttachments.size(), "Color attachment index out of range!");
+        return m_ColorAttachments[index];
+    }
     uint32_t GetDepthAttachmentRendererID() const { return m_DepthAttachment; }
+
+    template<typename T>
+    void ClearColorAttachment(uint32_t attachmentIndex, const T* value) const;
 
     const FramebufferSpecification& GetSpecification() const { return m_Specification; }
 private:
     uint32_t m_RendererID = 0;
     FramebufferSpecification m_Specification;
 
-    std::vector<FramebufferTextureFormatSpecification> m_ColorAttachmentSpecifications;
-    FramebufferTextureFormatSpecification m_DepthAttachmentSpecification;
+    std::vector<FramebufferTextureAttachmentSpecification> m_ColorAttachmentSpecifications;
+    FramebufferTextureAttachmentSpecification m_DepthAttachmentSpecification;
 
     std::vector<uint32_t> m_ColorAttachments;
     uint32_t m_DepthAttachment = 0;
 };
+
+template<>
+inline void Framebuffer::ClearColorAttachment<float>(uint32_t attachmentIndex, const float* value) const
+{
+    BH_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Color attachment index out of range!");
+    glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
+        Utils::GetGLDataFormatFromTextureType(m_ColorAttachmentSpecifications[attachmentIndex].Format),
+        GL_FLOAT,
+        value
+    );
+}

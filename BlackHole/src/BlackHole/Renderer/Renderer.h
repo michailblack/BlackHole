@@ -9,7 +9,7 @@ public:
     static void Init();
     static void Shutdown();
 
-    static void ClearColor(const glm::vec4& color);
+    static void SetClearColor(const glm::vec4& color);
     static void Clear();
 
     static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -17,9 +17,9 @@ public:
     static void BeginScene(const PerspectiveCamera& camera);
     static void EndScene();
 
-    static void Submit(const Ref<Model>& model, const glm::mat4& transform = glm::mat4(1.0f));
+    static void Submit(const Ref<Model>& model, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
 
-    static void RenderScreenQuad(const std::initializer_list<uint32_t>& textureIDs = {});
+    static void RenderScreenQuad(const Ref<Shader>& shader, const std::initializer_list<uint32_t>& textureIDs = {});
 
     static ShaderLibrary& GetShaderLibrary();
 

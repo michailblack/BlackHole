@@ -1,7 +1,7 @@
 #include "BlackHole-Editor/EditorLayer.h"
 
 #include <imgui.h>
-#include <glm/gtc/type_ptr.hpp>
+#include <GLFW/glfw3.h>
 
 EditorLayer::EditorLayer()
     : Layer("EditorLayer")
@@ -19,13 +19,22 @@ void EditorLayer::OnAttach()
 	fbSpec.Attachments = {
 		{
 		    FramebufferTextureFormat::RGBA8,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
 		},
 		{
-		    FramebufferTextureFormat::DEPTH24STENCIL8,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			FramebufferTextureFormat::DEPTH24,
+		    {
+		        { FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+		        { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+		    }
+        
 		}
 	};
 	m_ViewportFBO = CreateRef<Framebuffer>(fbSpec);
@@ -33,23 +42,40 @@ void EditorLayer::OnAttach()
 	fbSpec.Attachments = {
 		{
 		    FramebufferTextureFormat::RGBA16F,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
 		},
 		{
 		    FramebufferTextureFormat::RGBA16F,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
 		},
 		{
 		    FramebufferTextureFormat::RGBA16F,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
 		},
 		{
-		    FramebufferTextureFormat::DEPTH24,
-			{ FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST, FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST },
-			{ FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE, FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE }
+			FramebufferTextureFormat::DEPTH24,
+		    {
+		        { FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+		        { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+		    }
+        
 		}
 	};
 	m_GBufferFBO = CreateRef<Framebuffer>(fbSpec);
@@ -60,19 +86,32 @@ void EditorLayer::OnAttach()
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.vs.glsl";
 	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.fs.glsl";
 	Renderer::GetShaderLibrary().Load("Geometry", shSpec);
+	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Diffuse", 0);
+	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Normal", 1);
+	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Specular", 2);
 
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
-	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightningPass.fs.glsl";
-	Renderer::GetShaderLibrary().Load("Lightning", shSpec);
-	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_Position", 0);
-	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_Normal", 1);
-	Renderer::GetShaderLibrary().Get("Lightning")->UploadInt("u_AlbedoSpec", 2);
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightingPass.fs.glsl";
+	Renderer::GetShaderLibrary().Load("Lighting", shSpec);
+	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_Position", 0);
+	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_Normal", 1);
+	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_AlbedoSpec", 2);
 
-	m_PointLights = CreateRef<UniformBuffer>(3 * 4 * sizeof(float), 1);
-	auto* const mapPointLights = static_cast<glm::vec4*>(m_PointLights->Map(0, 2 * sizeof(float)));
-	*mapPointLights = glm::vec4(-1.0f, 0.0f, -1.0f, 0.0f);
-	*(mapPointLights + 1) = glm::vec4(0.0f, 100.0f, 100.0f, 0.0f);
-	*(mapPointLights + 2) = glm::vec4(0.7f, 1.8f, 0.0f, 0.0f);
+	m_PointLights = CreateRef<UniformBuffer>(10 * sizeof(float), 1);
+	auto* const mapPointLights = static_cast<float*>(m_PointLights->Map(0, 10 * sizeof(float)));
+	// Position
+	*mapPointLights       = 1.0f;
+	*(mapPointLights + 1) = -1.0f;
+	*(mapPointLights + 2) = -1.0f;
+	*(mapPointLights + 3) = 0.0f;
+	// Color
+	*(mapPointLights + 4) = 1.0f;
+	*(mapPointLights + 5) = 1.0f;
+	*(mapPointLights + 6) = 1.0f;
+	// Linear
+	*(mapPointLights + 7) = 0.09f;
+	// Quadratic
+	*(mapPointLights + 8) = 0.032f;
 	m_PointLights->Unmap();
 }
 
@@ -101,15 +140,21 @@ void EditorLayer::OnUpdate(Timestep ts)
 
 	Renderer::ResetStats();
 
+	auto* const mapPointLights = static_cast<float*>(m_PointLights->Map(0, 10 * sizeof(float)));
+	// Color
+	*(mapPointLights + 4) = glm::sin(glfwGetTime());
+	*(mapPointLights + 5) = glm::cos(glfwGetTime());
+	*(mapPointLights + 6) = (glm::sin(glfwGetTime()) + glm::cos(glfwGetTime())) / 2.0f;
+	m_PointLights->Unmap();
+
 	// Geometry path
 	{
 	    m_GBufferFBO->Bind();
 		Renderer::Clear();
+		m_GBufferFBO->ClearColorAttachment(1, static_cast<float*>(nullptr));
 
 		Renderer::BeginScene(m_CameraController.GetCamera());
-		shaderLib.Get("Geometry")->Bind();
-		shaderLib.Get("Geometry")->UploadMat4("u_Model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
-		Renderer::Submit(m_Model);
+		Renderer::Submit(m_Model, shaderLib.Get("Geometry"), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
 		Renderer::EndScene();
 
 		m_GBufferFBO->Unbind();
@@ -120,9 +165,13 @@ void EditorLayer::OnUpdate(Timestep ts)
         m_ViewportFBO->Bind();
 	    Renderer::Clear();
 
-		shaderLib.Get("Lightning")->Bind();
-		shaderLib.Get("Lightning")->UploadFloat3("u_CameraPos", m_CameraController.GetCamera().GetPosition());
-		Renderer::RenderScreenQuad({ m_GBufferFBO->GetColorAttachmentRendererID(), m_GBufferFBO->GetColorAttachmentRendererID(1), m_GBufferFBO->GetColorAttachmentRendererID(2) });
+		Renderer::BeginScene(m_CameraController.GetCamera());
+		Renderer::RenderScreenQuad(shaderLib.Get("Lighting"), {
+			m_GBufferFBO->GetColorAttachmentRendererID(),
+			m_GBufferFBO->GetColorAttachmentRendererID(1),
+			m_GBufferFBO->GetColorAttachmentRendererID(2)
+		});
+		Renderer::EndScene();
 
 	    m_ViewportFBO->Unbind();
     }
@@ -203,20 +252,6 @@ void EditorLayer::OnImGuiRender()
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
     ImGui::End();
-
-	/*const auto& shaderLibrary = Renderer::GetShaderLibrary();
-	ImGui::Begin("Light Properties");
-	ImGui::DragFloat3("Direction", glm::value_ptr(m_LightDirection), 0.01f);
-	ImGui::ColorEdit3("Diffuse", glm::value_ptr(m_LightDiffuse));
-	ImGui::ColorEdit3("Specular", glm::value_ptr(m_LightSpecular));
-	ImGui::DragFloat2("Width", glm::value_ptr(m_OrthoWidth));
-	ImGui::DragFloat2("Height", glm::value_ptr(m_OrthoHeight));
-	ImGui::DragFloat2("Depth", glm::value_ptr(m_OrthoDepth));
-	ImGui::End();
-
-	shaderLibrary.Get("Model")->UploadFloat3("u_LightDirection", m_LightDirection);
-    shaderLibrary.Get("Model")->UploadFloat3("u_DirectionalLight.Diffuse"  , m_LightDiffuse);
-    shaderLibrary.Get("Model")->UploadFloat3("u_DirectionalLight.Specular" , m_LightSpecular);*/
 
 	ImGui::End();
 }

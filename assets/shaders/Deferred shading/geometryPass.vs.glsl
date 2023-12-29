@@ -12,8 +12,8 @@ layout (location = 3) in vec3 a_Tangent;
 
 layout (location = 0) out VS_OUT
 {
-	vec3 FragmentPosition;
 	vec2 TexCoord;
+	vec3 FragmentPosition;
 	mat3 TBN;
 } vs_out;
 
@@ -29,10 +29,10 @@ void main()
 {
 	gl_Position = u_Projection * u_View * u_Model * vec4(a_Position, 1.0);
 	
-	mat4 normalMatrix = transpose(inverse(u_Model));
+	mat4 normalMatrix = transpose(inverse(u_View * u_Model));
 
-	vec3 T = normalize(vec3(normalMatrix * vec4(a_Tangent,   0.0)));
-	vec3 N = normalize(vec3(normalMatrix * vec4(a_Normal,    0.0)));
+	vec3 T = normalize(vec3(normalMatrix * vec4(a_Tangent, 0.0)));
+	vec3 N = normalize(vec3(normalMatrix * vec4(a_Normal, 0.0)));
 
 	// re-orthogonalize T with respect to N
 	T = normalize(T - dot(T, N) * N);
@@ -40,7 +40,7 @@ void main()
 	vec3 B = cross(N, T);
 
 	vs_out.TBN = mat3(T, B, N);
-	
-	vs_out.FragmentPosition = vec3(u_Model * vec4(a_Position, 1.0));
+		
 	vs_out.TexCoord = a_TexCoord;
+	vs_out.FragmentPosition = vec3(u_View * u_Model * vec4(a_Position, 1.0));
 }

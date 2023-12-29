@@ -6,8 +6,8 @@ layout (location = 2) out vec4 o_Albedo;
 
 layout (location = 0) in VS_OUT
 {
-	vec3 FragmentPosition;
 	vec2 TexCoord;
+	vec3 FragmentPosition;
 	mat3 TBN;
 } fs_in;
 
@@ -21,9 +21,6 @@ struct Material
 
 	sampler2DArray Normal;
 	uint NormalLayer;
-
-	sampler2DArray Displacement;
-	uint DisplacementLayer;
 
 	float Shininess;
 };
@@ -39,5 +36,5 @@ void main()
 	o_Normal = normalize(fs_in.TBN * o_Normal);
 
 	o_Albedo.rgb = texture(u_Material.Diffuse, vec3(fs_in.TexCoord, u_Material.DiffuseLayer)).rgb;
-	o_Albedo.a   = texture(u_Material.Specular, vec3(fs_in.TexCoord, u_Material.SpecularLayer)).a;
+	o_Albedo.a = texture(u_Material.Specular, vec3(fs_in.TexCoord, u_Material.SpecularLayer)).b;
 }

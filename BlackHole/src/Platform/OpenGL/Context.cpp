@@ -20,7 +20,7 @@ static void APIENTRY OpenGLErrorCallback(
     std::string typeStr;
     std::string msg;
 
-    switch (source)
+    /*switch (source)
     {
         case GL_DEBUG_SOURCE_API:             sourceStr += "API"; break;
         case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   sourceStr += "Window System"; break;
@@ -43,8 +43,9 @@ static void APIENTRY OpenGLErrorCallback(
         case GL_DEBUG_TYPE_OTHER:               typeStr = "Other"; break;
     }
 
-    //msg = "[OpenGL] " + sourceStr + "; " + typeStr + "\nMessage: " + message;
-    msg = "[OpenGL] " + typeStr + " in " + sourceStr + ":\n" + message;
+    msg = "[OpenGL] " + typeStr + " in " + sourceStr + ":\n" + message;*/
+
+    msg = "[OpenGL] " + std::string(message);
 
     switch (severity)
     {

@@ -15,6 +15,6 @@ public:
 Application* CreateApplication()
 {
     ApplicationSpecification spec;
-    spec.Name = "Black Hole Editor";
+    spec.Name = "BlackHole Editor";
     return new BlackHoleEditor(spec);
 }

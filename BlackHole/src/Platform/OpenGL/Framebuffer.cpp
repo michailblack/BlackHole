@@ -8,74 +8,9 @@ static constexpr uint32_t s_MaxFramebufferSize = 8192u;
 
 namespace Utils
 {
-    static GLenum GetTextureType(bool useMultisample)
+    static uint32_t GetTextureType(bool useMultisampling)
     {
-        return useMultisample ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
-    }
-
-    static void CreateTextures(bool useMultisample, uint32_t* id, uint32_t count)
-    {
-        glCreateTextures(GetTextureType(useMultisample), static_cast<int32_t>(count), id);
-    }
-
-    static std::pair<uint32_t, int32_t> GetGLFilteringParametersNames(FramebufferTextureFilteringMethod filtering)
-    {
-        switch (filtering)
-        {
-            case FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_NEAREST: return std::make_pair(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            case FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_NEAREST: return std::make_pair(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            case FramebufferTextureFilteringMethod::FILTER_MIN_TYPE_LINEAR:  return std::make_pair(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            case FramebufferTextureFilteringMethod::FILTER_MAG_TYPE_LINEAR:  return std::make_pair(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            default: BH_ASSERT(false, "Unknown filtering type!"); return std::make_pair(0, 0);
-        }
-    }
-
-    static std::pair<uint32_t, int32_t> GetGLWrappingParametersNames(FramebufferTextureWrappingMethod wrapping)
-    {
-        switch (wrapping)
-        {
-            case FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_EDGE:    return std::make_pair(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            case FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_EDGE:    return std::make_pair(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            case FramebufferTextureWrappingMethod::WRAP_S_TYPE_CLAMP_TO_BORDER:  return std::make_pair(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            case FramebufferTextureWrappingMethod::WRAP_T_TYPE_CLAMP_TO_BORDER:  return std::make_pair(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            case FramebufferTextureWrappingMethod::WRAP_S_TYPE_REPEAT:           return std::make_pair(GL_TEXTURE_WRAP_S, GL_REPEAT);
-            case FramebufferTextureWrappingMethod::WRAP_T_TYPE_REPEAT:           return std::make_pair(GL_TEXTURE_WRAP_T, GL_REPEAT);
-            default: BH_ASSERT(false, "Unknown wrapping type!"); return std::make_pair(0, 0);
-        }
-    }
-
-    static uint32_t GetGLTextureParameterName(FramebufferTextureParameterName textureParameterName)
-    {
-        switch (textureParameterName)
-        {
-            case FramebufferTextureParameterName::DepthStencilTextureMode: return GL_DEPTH_STENCIL_TEXTURE_MODE;
-            case FramebufferTextureParameterName::TextureBorderColor:      return GL_TEXTURE_BORDER_COLOR;
-            default: BH_ASSERT(false, "Unknown texture parameter name!"); return 0;
-        }
-    }
-
-    static void CreateTextureStorage(uint32_t samples, uint32_t attachmentID, GLenum internalFormat, uint32_t width, uint32_t height, const std::vector<FramebufferTextureFilteringMethod>& filtering, const std::vector<FramebufferTextureWrappingMethod>& wrapping)
-    {
-        if (samples > 1)
-        {
-            glTextureStorage2DMultisample(attachmentID, static_cast<int32_t>(samples), internalFormat, static_cast<int32_t>(width), static_cast<int32_t>(height), GL_TRUE);
-        }
-        else
-        {
-            glTextureStorage2D(attachmentID, 1, internalFormat, static_cast<int32_t>(width), static_cast<int32_t>(height));
-
-            for (const auto& filteringFormat : filtering)
-            {
-                const auto [ parameterName, value ] = GetGLFilteringParametersNames(filteringFormat);
-                glTextureParameteri(attachmentID, parameterName, value);
-            }
-
-            for (const auto& wrappingFormat : wrapping)
-            {
-                const auto [ parameterName, value ] = GetGLWrappingParametersNames(wrappingFormat);
-                glTextureParameteri(attachmentID, parameterName, value);
-            }
-        }
+        return useMultisampling ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
     }
 
     static bool IsColorAttachment(FramebufferTextureFormat format)
@@ -87,12 +22,87 @@ namespace Utils
             default: return false;
         }
     }
+
+    static void CreateTextures(bool useMultisample, uint32_t* id, uint32_t count)
+    {
+        glCreateTextures(GetTextureType(useMultisample), static_cast<int32_t>(count), id);
+    }
+
+    static uint32_t GetGLTextureFormat(FramebufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FramebufferTextureFormat::RGBA8:           return GL_RGBA8;
+            case FramebufferTextureFormat::RGBA16F:         return GL_RGBA16F;
+            case FramebufferTextureFormat::DEPTH24:         return GL_DEPTH_COMPONENT24;
+            case FramebufferTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
+            case FramebufferTextureFormat::None:
+            default: BH_ASSERT(false, "Unknown texture format!"); return 0;
+        }
+    }
+
+    static uint32_t GetGLDepthStencilAttachmentType(FramebufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FramebufferTextureFormat::DEPTH24:         return GL_DEPTH_ATTACHMENT;
+            case FramebufferTextureFormat::DEPTH24STENCIL8: return GL_DEPTH_STENCIL_ATTACHMENT;
+            case FramebufferTextureFormat::None:
+            default: BH_ASSERT(false, "Unknown depth/stencil texture format!"); return 0;
+        }
+    }
+
+    static uint32_t GetGLTextureParameterName(FramebufferTextureParameterName parameterName)
+    {
+        switch (parameterName)
+        {
+            case FramebufferTextureParameterName::FILTER_MIN: return GL_TEXTURE_MIN_FILTER;
+            case FramebufferTextureParameterName::FILTER_MAG: return GL_TEXTURE_MAG_FILTER;
+            case FramebufferTextureParameterName::WRAP_S:     return GL_TEXTURE_WRAP_S;
+            case FramebufferTextureParameterName::WRAP_T:     return GL_TEXTURE_WRAP_T;
+            case FramebufferTextureParameterName::None:
+            default: BH_ASSERT(false, "Unknown texture parameter name!"); return 0;
+        }
+    }
+
+    static int32_t GetGLTextureParameterValue(FramebufferTextureParameterValue parameterValue)
+    {
+        switch (parameterValue)
+        {
+            case FramebufferTextureParameterValue::FILTER_TYPE_NEAREST:      return GL_NEAREST;
+            case FramebufferTextureParameterValue::FILTER_TYPE_LINEAR:       return GL_LINEAR;
+            case FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE:  return GL_CLAMP_TO_EDGE;
+            case FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_BORDER:return GL_CLAMP_TO_BORDER;
+            case FramebufferTextureParameterValue::WRAP_TYPE_REPEAT:         return GL_REPEAT;
+            case FramebufferTextureParameterValue::None:
+            default: BH_ASSERT(false, "Unknown texture parameter value!"); return 0;
+        }
+    }
+
+    static void CreateTextureStorage(uint32_t samples, uint32_t attachmentID, GLenum internalFormat, uint32_t width, uint32_t height, const std::vector<std::pair<FramebufferTextureParameterName, FramebufferTextureParameterValue>>& textureParameter)
+    {
+        if (samples > 1)
+        {
+            glTextureStorage2DMultisample(attachmentID, static_cast<int32_t>(samples), internalFormat, static_cast<int32_t>(width), static_cast<int32_t>(height), GL_TRUE);
+        }
+        else
+        {
+            glTextureStorage2D(attachmentID, 1, internalFormat, static_cast<int32_t>(width), static_cast<int32_t>(height));
+        }
+
+        for (const auto& parameter : textureParameter)
+        {
+            const uint32_t parameterName = GetGLTextureParameterName(parameter.first);
+            const int32_t parameterValue = GetGLTextureParameterValue(parameter.second);
+            glTextureParameteri(attachmentID, parameterName, parameterValue);
+        }
+    }
 }
 
-Framebuffer::Framebuffer(const FramebufferSpecification& specification)
-    : m_Specification(specification)
+Framebuffer::Framebuffer(FramebufferSpecification specification)
+    : m_Specification(std::move(specification))
 {
-    for (const auto& attachment : specification.Attachments.Attachments)
+    for (const auto& attachment : m_Specification.Attachments.TextureAttachments)
     {
         if (Utils::IsColorAttachment(attachment.Format))
             m_ColorAttachmentSpecifications.emplace_back(attachment);
@@ -122,7 +132,7 @@ void Framebuffer::Invalidate()
         m_DepthAttachment = 0;
     }
 
-    const bool useMultisample = m_Specification.Samples > 1;
+    const bool useMultisampling = m_Specification.Samples > 1;
 
     glCreateFramebuffers(1, &m_RendererID);
 
@@ -130,56 +140,44 @@ void Framebuffer::Invalidate()
     {
         m_ColorAttachments.resize(m_ColorAttachmentSpecifications.size());
 
-        Utils::CreateTextures(useMultisample, m_ColorAttachments.data(), m_ColorAttachments.size());
+        Utils::CreateTextures(useMultisampling, m_ColorAttachments.data(), m_ColorAttachments.size());
 
-        for (int32_t i = 0; i < m_ColorAttachmentSpecifications.size(); ++i)
+        for (uint32_t i = 0; i < m_ColorAttachmentSpecifications.size(); ++i)
         {
-            switch (m_ColorAttachmentSpecifications[i].Format)
-            {
-                case FramebufferTextureFormat::RGBA8:
-                {
-                    Utils::CreateTextureStorage(m_Specification.Samples, m_ColorAttachments[i], GL_RGBA8, m_Specification.Width, m_Specification.Height, m_ColorAttachmentSpecifications[i].Filtering, m_ColorAttachmentSpecifications[i].Wrapping);
-                    glNamedFramebufferTexture(m_RendererID, GL_COLOR_ATTACHMENT0 + i, m_ColorAttachments[i], 0);
-                    break;
-                }
-                case FramebufferTextureFormat::RGBA16F:
-                {
-                    Utils::CreateTextureStorage(m_Specification.Samples, m_ColorAttachments[i], GL_RGBA16F, m_Specification.Width, m_Specification.Height, m_ColorAttachmentSpecifications[i].Filtering, m_ColorAttachmentSpecifications[i].Wrapping);
-                    glNamedFramebufferTexture(m_RendererID, GL_COLOR_ATTACHMENT0 + i, m_ColorAttachments[i], 0);
-                    break; 
-                }
-                default: BH_ASSERT(false, "Unknown color attachment format");
-            }
+            Utils::CreateTextureStorage(m_Specification.Samples,
+                m_ColorAttachments[i],
+                Utils::GetGLTextureFormat(m_ColorAttachmentSpecifications[i].Format),
+                m_Specification.Width, m_Specification.Height,
+                m_ColorAttachmentSpecifications[i].Parameters
+            );
+            glNamedFramebufferTexture(m_RendererID, GL_COLOR_ATTACHMENT0 + i, m_ColorAttachments[i], 0);
         }
     }
 
     if (m_DepthAttachmentSpecification.Format != FramebufferTextureFormat::None)
     {
-        glCreateTextures(Utils::GetTextureType(useMultisample), 1, &m_DepthAttachment);
+        glCreateTextures(Utils::GetTextureType(useMultisampling), 1, &m_DepthAttachment);
 
-        switch (m_DepthAttachmentSpecification.Format)
-        {
-            case FramebufferTextureFormat::DEPTH24STENCIL8:
-            {
-                    Utils::CreateTextureStorage(m_Specification.Samples, m_DepthAttachment, GL_DEPTH24_STENCIL8, m_Specification.Width, m_Specification.Height, m_DepthAttachmentSpecification.Filtering, m_DepthAttachmentSpecification.Wrapping);
-                    glNamedFramebufferTexture(m_RendererID, GL_DEPTH_STENCIL_ATTACHMENT, m_DepthAttachment, 0);
-                    break;
-            }
-            case FramebufferTextureFormat::DEPTH24:
-            {
-                    Utils::CreateTextureStorage(m_Specification.Samples, m_DepthAttachment, GL_DEPTH_COMPONENT24, m_Specification.Width, m_Specification.Height, m_DepthAttachmentSpecification.Filtering, m_DepthAttachmentSpecification.Wrapping);
-                    glNamedFramebufferTexture(m_RendererID, GL_DEPTH_ATTACHMENT, m_DepthAttachment, 0);
-                    break;
-            }
-            default: BH_ASSERT(false, "Unknown depth/stencil attachment format");
-        }
+        Utils::CreateTextureStorage(m_Specification.Samples,
+            m_DepthAttachment,
+            Utils::GetGLTextureFormat(m_DepthAttachmentSpecification.Format),
+            m_Specification.Width, m_Specification.Height,
+            m_DepthAttachmentSpecification.Parameters
+        );
+        glNamedFramebufferTexture(m_RendererID, Utils::GetGLDepthStencilAttachmentType(m_DepthAttachmentSpecification.Format), m_DepthAttachment, 0);
     }
 
-    if (m_ColorAttachments.size() > 1)
+    int32_t maxColorAttachments;
+    glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxColorAttachments);
+
+    if (m_ColorAttachments.size() > 1 && m_ColorAttachments.size() < maxColorAttachments)
     {
+        std::vector<uint32_t> buffers(m_ColorAttachments.size());
+        for (uint32_t i = 0; i < m_ColorAttachments.size(); ++i)
+            buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+
         BH_ASSERT(m_ColorAttachments.size() < 4, "Usupported amount of color attachemts specified!");
-        constexpr GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-        glNamedFramebufferDrawBuffers(m_RendererID, m_ColorAttachments.size(), buffers);
+        glNamedFramebufferDrawBuffers(m_RendererID, m_ColorAttachments.size(), buffers.data());
     }
 
     if (m_ColorAttachmentSpecifications.empty())

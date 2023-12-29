@@ -2,9 +2,6 @@
 /build*/
 /out*/
 
-## Ignored assets
-assets/ignored
-
 ## Visual Studio artifacts and projects
 .vs
 ipch

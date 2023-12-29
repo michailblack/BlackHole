@@ -43,7 +43,7 @@ void Application::Run()
         const Timestep ts = time - m_LastFrameTime;
         m_LastFrameTime = time;
 
-        Renderer::ClearColor({ 0.2f, 0.2f, 0.2f, 1.0f});
+        Renderer::SetClearColor({ 0.2f, 0.2f, 0.2f, 1.0f});
         Renderer::Clear();
 
         for (Layer* layer : m_LayerStack)

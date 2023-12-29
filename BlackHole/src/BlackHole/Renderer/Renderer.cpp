@@ -34,7 +34,7 @@ void Renderer::Init()
     s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Diffuse", 0);
     s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Specular", 1);
     s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Normal", 2);
-    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Displacement", 3);
+    //s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Displacement", 3);
 
     CubemapSpecification cbSpec;
     cbSpec.Right  = Filesystem::GetTexturesPath() / "skyboxes/mountains/right.jpg";
@@ -117,7 +117,7 @@ void Renderer::Shutdown()
 {
 }
 
-void Renderer::ClearColor(const glm::vec4& color)
+void Renderer::SetClearColor(const glm::vec4& color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
 }
@@ -144,19 +144,19 @@ void Renderer::EndScene()
 {
 }
 
-void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
+void Renderer::Submit(const Ref<Model>& model, const Ref<Shader>& shader, const glm::mat4& transform)
 {
     if (model->GetDiffuseMapArray().get())
         model->GetDiffuseMapArray()->Bind();
 
-    if (model->GetSpecularMapArray().get())
-        model->GetSpecularMapArray()->Bind(1);
-
     if (model->GetNormalMapArray().get())
-        model->GetNormalMapArray()->Bind(2);
+        model->GetNormalMapArray()->Bind(1);
 
-    if (model->GetDisplacementMapArray().get())
-        model->GetDisplacementMapArray()->Bind(3);
+    if (model->GetSpecularMapArray().get())
+        model->GetSpecularMapArray()->Bind(2);
+
+    shader->Bind();
+    shader->UploadMat4("u_Model", transform);
 
     for (const auto& mesh : model->GetMeshes())
     {
@@ -165,10 +165,9 @@ void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
         const uint32_t lineIndicesCount = mesh->GetLineIndicesCount();
         const uint32_t triangleIndicesCount = mesh->GetTriangleIndicesCount();
 
-        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
-        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.SpecularLayer", mesh->GetSpecularTextureLayer());
-        s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.NormalLayer", mesh->GetNormalLayer());
-        //s_Data.ShaderLibrary.Get("Model")->UploadUint("u_Material.DisplacementLayer", mesh->GetDisplacementLayer());
+        shader->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
+        shader->UploadUint("u_Material.SpecularLayer", mesh->GetSpecularTextureLayer());
+        shader->UploadUint("u_Material.NormalLayer", mesh->GetNormalLayer());
 
         vertexArray->Bind();
         if (pointIndicesCount)
@@ -210,12 +209,13 @@ void Renderer::Submit(const Ref<Model>& model, const glm::mat4& transform)
     }
 }
 
-void Renderer::RenderScreenQuad(const std::initializer_list<uint32_t>& textureIDs)
+void Renderer::RenderScreenQuad(const Ref<Shader>& shader, const std::initializer_list<uint32_t>& textureIDs)
 {
     uint32_t i = 0;
     for (const uint32_t textureID : textureIDs)
         glBindTextureUnit(i++, textureID);
 
+    shader->Bind();
     s_Data.ScreenSquadVAO->Bind();
     glDrawArrays(GL_TRIANGLES, 0, 12);
 }

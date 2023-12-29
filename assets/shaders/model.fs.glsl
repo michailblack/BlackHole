@@ -24,8 +24,8 @@ struct Material
 	sampler2DArray Normal;
 	uint NormalLayer;
 
-	sampler2DArray Displacement;
-	uint DisplacementLayer;
+	//sampler2DArray Displacement;
+	//uint DisplacementLayer;
 
 	float Shininess;
 };
@@ -44,39 +44,39 @@ uniform DirectionalLight u_DirectionalLight;
 uniform sampler2D u_ShadowMap;
 uniform samplerCube u_Skybox;
 
-vec2 ParallaxMapping(in const vec2 texCoord, in const vec3 viewDir)
-{
-	const float minLayers = 8.0;
-	const float maxLayers = 32.0;
-	const float layersCount = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
-
-    float layerDepth = 1.0 / layersCount;
-    float currentLayerDepth = 0.0;
-
-    vec2 P = viewDir.xy * 0.1; 
-    vec2 deltaTexCoords = P / layersCount;
-
-	vec2  currentTexCoord      = texCoord;
-	float currentDepthMapValue = texture(u_Material.Displacement, vec3(currentTexCoord, u_Material.DisplacementLayer)).r;
-
-	while(currentLayerDepth < currentDepthMapValue)
-	{
-		currentTexCoord -= deltaTexCoords;
-		currentDepthMapValue = texture(u_Material.Displacement, vec3(currentTexCoord, u_Material.DisplacementLayer)).r;
-		currentLayerDepth += layerDepth;
-	}
-
-	vec2 prevTexCoord = currentTexCoord + deltaTexCoords;
-
-	// get depth after and before collision for linear interpolation
-	float afterDepth  = currentDepthMapValue - currentLayerDepth;
-	float beforeDepth = texture(u_Material.Displacement, vec3(prevTexCoord, u_Material.DisplacementLayer)).r - currentLayerDepth + layerDepth;
- 
-	float weight = afterDepth / (afterDepth - beforeDepth);
-	vec2 finalTexCoords = prevTexCoord * weight + currentTexCoord * (1.0 - weight);
-
-	return finalTexCoords; 
-}
+//vec2 ParallaxMapping(in const vec2 texCoord, in const vec3 viewDir)
+//{
+//	const float minLayers = 8.0;
+//	const float maxLayers = 32.0;
+//	const float layersCount = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
+//
+//    float layerDepth = 1.0 / layersCount;
+//    float currentLayerDepth = 0.0;
+//
+//    vec2 P = viewDir.xy * 0.1; 
+//    vec2 deltaTexCoords = P / layersCount;
+//
+//	vec2  currentTexCoord      = texCoord;
+//	float currentDepthMapValue = texture(u_Material.Displacement, vec3(currentTexCoord, u_Material.DisplacementLayer)).r;
+//
+//	while(currentLayerDepth < currentDepthMapValue)
+//	{
+//		currentTexCoord -= deltaTexCoords;
+//		currentDepthMapValue = texture(u_Material.Displacement, vec3(currentTexCoord, u_Material.DisplacementLayer)).r;
+//		currentLayerDepth += layerDepth;
+//	}
+//
+//	vec2 prevTexCoord = currentTexCoord + deltaTexCoords;
+//
+//	// get depth after and before collision for linear interpolation
+//	float afterDepth  = currentDepthMapValue - currentLayerDepth;
+//	float beforeDepth = texture(u_Material.Displacement, vec3(prevTexCoord, u_Material.DisplacementLayer)).r - currentLayerDepth + layerDepth;
+// 
+//	float weight = afterDepth / (afterDepth - beforeDepth);
+//	vec2 finalTexCoords = prevTexCoord * weight + currentTexCoord * (1.0 - weight);
+//
+//	return finalTexCoords; 
+//}
 
 float CalculateShadow(in const vec4 fragmentPositionLightSpace, in const vec3 normal, in const vec3 lightDir)
 {
