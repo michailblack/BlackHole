@@ -32,7 +32,7 @@ void Renderer::Init()
 
     s_Data.ShaderLibrary.Load("Model", modelShaderSpec);
     s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Diffuse", 0);
-    s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Specular", 1);
+    //s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Specular", 1);
     s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Normal", 2);
     //s_Data.ShaderLibrary.Get("Model")->UploadInt("u_Material.Displacement", 3);
 
@@ -152,9 +152,6 @@ void Renderer::Submit(const Ref<Model>& model, const Ref<Shader>& shader, const 
     if (model->GetNormalMapArray().get())
         model->GetNormalMapArray()->Bind(1);
 
-    if (model->GetSpecularMapArray().get())
-        model->GetSpecularMapArray()->Bind(2);
-
     shader->Bind();
     shader->UploadMat4("u_Model", transform);
 
@@ -166,7 +163,6 @@ void Renderer::Submit(const Ref<Model>& model, const Ref<Shader>& shader, const 
         const uint32_t triangleIndicesCount = mesh->GetTriangleIndicesCount();
 
         shader->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
-        shader->UploadUint("u_Material.SpecularLayer", mesh->GetSpecularTextureLayer());
         shader->UploadUint("u_Material.NormalLayer", mesh->GetNormalLayer());
 
         vertexArray->Bind();

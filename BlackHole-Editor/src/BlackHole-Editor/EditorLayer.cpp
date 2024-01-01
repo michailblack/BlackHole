@@ -88,7 +88,6 @@ void EditorLayer::OnAttach()
 	Renderer::GetShaderLibrary().Load("Geometry", shSpec);
 	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Diffuse", 0);
 	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Normal", 1);
-	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Specular", 2);
 
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
 	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightingPass.fs.glsl";
@@ -151,6 +150,7 @@ void EditorLayer::OnUpdate(Timestep ts)
 	{
 	    m_GBufferFBO->Bind();
 		Renderer::Clear();
+		m_GBufferFBO->ClearColorAttachment(0, static_cast<float*>(nullptr));
 		m_GBufferFBO->ClearColorAttachment(1, static_cast<float*>(nullptr));
 
 		Renderer::BeginScene(m_CameraController.GetCamera());

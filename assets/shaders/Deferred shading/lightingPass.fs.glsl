@@ -35,8 +35,6 @@ void main()
 	vec3 fragmentPos     = texture(u_Position  , v_TexCoord).rgb;
 	vec3 normal          = texture(u_Normal    , v_TexCoord).rgb;
 	vec3 albedo          = texture(u_AlbedoSpec, v_TexCoord).rgb;
-	float specularScalar = texture(u_AlbedoSpec, v_TexCoord).a;
-	specularScalar = 32.0;
 
 	vec3 viewDir = normalize(-fragmentPos);
 
@@ -51,15 +49,11 @@ void main()
 		// diffuse color
 		vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * PointLights[i].Color;
 
-		// specular color
-		vec3 halfwayDir = normalize(viewDir + lightDir);
-        vec3 specular = pow(max(dot(normal, halfwayDir), 0.0), specularScalar) * PointLights[i].Color;
-
 		// attenuation
         float dist = length(lightPosition - fragmentPos);
         float attenuation = 1.0 / (1.0 + PointLights[i].Linear * dist + PointLights[i].Quadratic * dist * dist);
 
-		fragmentColor += (diffuse + specular) * attenuation;
+		fragmentColor += diffuse * attenuation;
 	}
 
 	float exposure = 1.0;

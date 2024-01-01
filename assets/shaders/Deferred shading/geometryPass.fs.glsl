@@ -16,13 +16,8 @@ struct Material
 	sampler2DArray Diffuse;
 	uint DiffuseLayer;
 
-	sampler2DArray Specular;
-	uint SpecularLayer;
-
 	sampler2DArray Normal;
 	uint NormalLayer;
-
-	float Shininess;
 };
 
 uniform Material u_Material;
@@ -36,5 +31,4 @@ void main()
 	o_Normal = normalize(fs_in.TBN * o_Normal);
 
 	o_Albedo.rgb = texture(u_Material.Diffuse, vec3(fs_in.TexCoord, u_Material.DiffuseLayer)).rgb;
-	o_Albedo.a = texture(u_Material.Specular, vec3(fs_in.TexCoord, u_Material.SpecularLayer)).b;
 }
