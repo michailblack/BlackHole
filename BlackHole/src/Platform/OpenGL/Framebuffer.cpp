@@ -210,6 +210,14 @@ void Framebuffer::BlitFramebuffer(const Ref<Framebuffer>& framebuffer) const
         GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
+void Framebuffer::BlitFramebufferDepthAttachment(const Ref<Framebuffer>& framebuffer) const
+{
+    glBlitNamedFramebuffer(framebuffer->m_RendererID, m_RendererID,
+        0, 0, static_cast<int32_t>(framebuffer->m_Specification.Width), static_cast<int32_t>(framebuffer->m_Specification.Height),
+        0, 0, static_cast<int32_t>(m_Specification.Width), static_cast<int32_t>(m_Specification.Height),
+        m_DepthAttachmentSpecification.Format == FramebufferTextureFormat::DEPTH24 ? GL_DEPTH_BUFFER_BIT : GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+}
+
 void Framebuffer::Bind() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);

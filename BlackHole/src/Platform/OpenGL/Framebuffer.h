@@ -94,6 +94,7 @@ public:
 
     void Resize(uint32_t width, uint32_t height);
     void BlitFramebuffer(const Ref<Framebuffer>& framebuffer) const;
+    void BlitFramebufferDepthAttachment(const Ref<Framebuffer>& framebuffer) const;
 
     uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const
     {

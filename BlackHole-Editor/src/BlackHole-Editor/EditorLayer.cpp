@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
+#include "glm/gtc/type_ptr.inl"
+
+
 EditorLayer::EditorLayer()
     : Layer("EditorLayer")
     , m_CameraController(PerspectiveCamera(45.0f,
@@ -37,7 +40,7 @@ void EditorLayer::OnAttach()
         
 		}
 	};
-	m_ViewportFBO = CreateRef<Framebuffer>(fbSpec);
+	m_FinalResultFBO = CreateRef<Framebuffer>(fbSpec);
 
 	fbSpec.Attachments = {
 		{
@@ -80,38 +83,80 @@ void EditorLayer::OnAttach()
 	};
 	m_GBufferFBO = CreateRef<Framebuffer>(fbSpec);
 
-	m_Model = CreateRef<Model>(Filesystem::GetModelsPath() / "primitives/cube/cube.obj");
+	fbSpec.Attachments = {
+		{
+		    FramebufferTextureFormat::RGBA16F,
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
+		},
+	    {
+		    FramebufferTextureFormat::RGBA16F,
+			{
+				{ FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+			    { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+				{ FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+                { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+			}
+		},
+		{
+			FramebufferTextureFormat::DEPTH24,
+		    {
+		        { FramebufferTextureParameterName::FILTER_MAG, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::FILTER_MIN, FramebufferTextureParameterValue::FILTER_TYPE_NEAREST },
+		        { FramebufferTextureParameterName::WRAP_S, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE },
+		        { FramebufferTextureParameterName::WRAP_T, FramebufferTextureParameterValue::WRAP_TYPE_CLAMP_TO_EDGE }
+		    }
+        
+		}
+	};
+	m_PingPongPostProcessFBO = CreateRef<Framebuffer>(fbSpec);
+
+	m_FloorModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/floor/floor.obj");
+	m_CarModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/covered_car_1k/covered_car_1k.obj");
+	m_PointLightModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/point_light/sphere.obj");
 
 	ShaderSpecification shSpec;
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.vs.glsl";
 	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/geometryPass.fs.glsl";
-	Renderer::GetShaderLibrary().Load("Geometry", shSpec);
-	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Diffuse", 0);
-	Renderer::GetShaderLibrary().Get("Geometry")->UploadInt("u_Material.Normal", 1);
+	Renderer::GetShaderLibrary().Load("GeometryPass", shSpec);
+	Renderer::GetShaderLibrary().Get("GeometryPass")->UploadInt("u_Material.Diffuse", 0);
+	Renderer::GetShaderLibrary().Get("GeometryPass")->UploadInt("u_Material.Normal", 1);
+	Renderer::GetShaderLibrary().Get("GeometryPass")->UploadInt("u_Material.Displacement", 2);
+
+	shSpec.VertexPath = Filesystem::GetShadersPath() / "Deferred shading/lightingPass.vs.glsl";
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightingPass.fs.glsl";
+	Renderer::GetShaderLibrary().Load("LightingPass", shSpec);
+	Renderer::GetShaderLibrary().Get("LightingPass")->UploadInt("u_Position", 0);
+	Renderer::GetShaderLibrary().Get("LightingPass")->UploadInt("u_Normal", 1);
+	Renderer::GetShaderLibrary().Get("LightingPass")->UploadInt("u_AlbedoSpec", 2);
+
+	Renderer::GetShaderLibrary().Load(Filesystem::GetShadersPath() / "PointLightSource.glsl");
 
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
-	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightingPass.fs.glsl";
-	Renderer::GetShaderLibrary().Load("Lighting", shSpec);
-	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_Position", 0);
-	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_Normal", 1);
-	Renderer::GetShaderLibrary().Get("Lighting")->UploadInt("u_AlbedoSpec", 2);
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "Deferred shading/lightingMap.fs.glsl";
+	Renderer::GetShaderLibrary().Load("LightingMap", shSpec);
+	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_Position", 0);
+	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_Normal", 1);
+	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_AlbedoSpec", 2);
+	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_LightMap", 3);
 
-	m_PointLights = CreateRef<UniformBuffer>(10 * sizeof(float), 1);
-	auto* const mapPointLights = static_cast<float*>(m_PointLights->Map(0, 10 * sizeof(float)));
-	// Position
-	*mapPointLights       = 1.0f;
-	*(mapPointLights + 1) = -1.0f;
-	*(mapPointLights + 2) = -1.0f;
-	*(mapPointLights + 3) = 0.0f;
-	// Color
-	*(mapPointLights + 4) = 1.0f;
-	*(mapPointLights + 5) = 1.0f;
-	*(mapPointLights + 6) = 1.0f;
-	// Linear
-	*(mapPointLights + 7) = 0.09f;
-	// Quadratic
-	*(mapPointLights + 8) = 0.032f;
-	m_PointLights->Unmap();
+	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "HDRtoLDR.fs.glsl";
+	Renderer::GetShaderLibrary().Load("HDRtoLDR", shSpec);
+	Renderer::GetShaderLibrary().Get("HDRtoLDR")->UploadInt("u_Scene", 0);
+
+	PointLight pointLight;
+	pointLight.Position = { 1.0f, 1.0f, -2.0f };
+	pointLight.Color = { 1.0f, 0.0f, 0.0f };
+	pointLight.Linear = 0.7f;
+	pointLight.Quadratic = 1.8f;
+	pointLight.Intensity = 1.0f;
+
+	m_PointLightsInfo.push_back(pointLight);
 }
 
 void EditorLayer::OnDetach()
@@ -128,53 +173,118 @@ void EditorLayer::OnUpdate(Timestep ts)
 	const auto& shaderLib = Renderer::GetShaderLibrary();
 
 	// Resize
-    const FramebufferSpecification& spec = m_ViewportFBO->GetSpecification();
+    const FramebufferSpecification& spec = m_FinalResultFBO->GetSpecification();
 	if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f
 		&& (spec.Width != static_cast<uint32_t>(m_ViewportSize.x) || spec.Height != static_cast<uint32_t>(m_ViewportSize.y)))
 	{
-		m_ViewportFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+		m_FinalResultFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
 		m_GBufferFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
+		m_PingPongPostProcessFBO->Resize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
 		m_CameraController.OnResize(static_cast<uint32_t>(m_ViewportSize.x), static_cast<uint32_t>(m_ViewportSize.y));
 	}
 
 	Renderer::ResetStats();
 
-	auto* const mapPointLights = static_cast<float*>(m_PointLights->Map(0, 10 * sizeof(float)));
-	// Color
-	*(mapPointLights + 4) = glm::sin(glfwGetTime());
-	*(mapPointLights + 5) = glm::cos(glfwGetTime());
-	*(mapPointLights + 6) = (glm::sin(glfwGetTime()) + glm::cos(glfwGetTime())) / 2.0f;
-	m_PointLights->Unmap();
-
-	// Geometry path
+	// Geometry pass
 	{
 	    m_GBufferFBO->Bind();
 		Renderer::Clear();
 		m_GBufferFBO->ClearColorAttachment(0, static_cast<float*>(nullptr));
 		m_GBufferFBO->ClearColorAttachment(1, static_cast<float*>(nullptr));
 
+		// Drawing all meshes to obtain info for G-buffer
 		Renderer::BeginScene(m_CameraController.GetCamera());
-		Renderer::Submit(m_Model, shaderLib.Get("Geometry"), glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
+
+		glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
+		transform = glm::translate(transform, glm::vec3(0.0f, -0.5f, 0.0));
+		Renderer::Submit(m_FloorModel, shaderLib.Get("GeometryPass"), transform);
+
+		transform = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
+		Renderer::Submit(m_CarModel, shaderLib.Get("GeometryPass"), transform);
+
 		Renderer::EndScene();
 
 		m_GBufferFBO->Unbind();
 	}
 
-	// Lightning path
-    {
-        m_ViewportFBO->Bind();
-	    Renderer::Clear();
+	// Lighting pass
+	m_PingPongPostProcessFBO->Bind();
+	{
+		// Generating lighting map
+		Renderer::Clear();
+		m_PingPongPostProcessFBO->ClearColorAttachment<float>(0, nullptr);
+		m_PingPongPostProcessFBO->ClearColorAttachment<float>(1, nullptr);
 
 		Renderer::BeginScene(m_CameraController.GetCamera());
-		Renderer::RenderScreenQuad(shaderLib.Get("Lighting"), {
-			m_GBufferFBO->GetColorAttachmentRendererID(),
-			m_GBufferFBO->GetColorAttachmentRendererID(1),
-			m_GBufferFBO->GetColorAttachmentRendererID(2)
-		});
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+        for (const auto& pointLight : m_PointLightsInfo)
+        {
+			const float lightMax = glm::max(glm::max(pointLight.Color.r, pointLight.Color.g), pointLight.Color.b);
+			const float lightVolumeRadius = 
+				(-pointLight.Linear +  glm::sqrt(pointLight.Linear * pointLight.Linear - 4.0f * pointLight.Quadratic * (1.0f - (256.0f / 5.0f) * lightMax))) / (2.0f * pointLight.Quadratic);
+            glm::mat4 transform = glm::mat4(1.0f);
+            transform = glm::translate(transform, pointLight.Position);
+            transform = glm::scale(transform, glm::vec3(lightVolumeRadius));
+
+            glBindTextureUnit(0, m_GBufferFBO->GetColorAttachmentRendererID());
+			glBindTextureUnit(1, m_GBufferFBO->GetColorAttachmentRendererID(1));
+			glBindTextureUnit(2, m_GBufferFBO->GetColorAttachmentRendererID(2));
+            shaderLib.Get("LightingPass")->UploadFloat3("u_PointLight.Position", pointLight.Position);
+            shaderLib.Get("LightingPass")->UploadFloat3("u_PointLight.Color", pointLight.Color * pointLight.Intensity);
+			shaderLib.Get("LightingPass")->UploadFloat("u_PointLight.Linear", pointLight.Linear);
+			shaderLib.Get("LightingPass")->UploadFloat("u_PointLight.Quadratic", pointLight.Quadratic);
+			shaderLib.Get("LightingPass")->UploadFloat("u_PointLight.VolumeRadius", lightVolumeRadius);
+
+			Renderer::Submit(m_PointLightModel, shaderLib.Get("LightingPass"), transform);
+        }
+		glDisable(GL_CULL_FACE);
+
 		Renderer::EndScene();
 
-	    m_ViewportFBO->Unbind();
+	    // Applying lighting map
+		glDisable(GL_DEPTH_TEST);
+		Renderer::BeginScene(m_CameraController.GetCamera());
+		Renderer::RenderScreenQuad(shaderLib.Get("LightingMap"), {
+			m_GBufferFBO->GetColorAttachmentRendererID(),
+			m_GBufferFBO->GetColorAttachmentRendererID(1),
+			m_GBufferFBO->GetColorAttachmentRendererID(2),
+			m_PingPongPostProcessFBO->GetColorAttachmentRendererID()
+		});
+		Renderer::EndScene();
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	// Forward lighting pass
+    {
+		Renderer::BeginScene(m_CameraController.GetCamera());
+		m_PingPongPostProcessFBO->BlitFramebufferDepthAttachment(m_GBufferFBO);
+
+		for (const auto& pointLight : m_PointLightsInfo)
+        {
+			glm::mat4 transform = glm::mat4(1.0f);
+            transform = glm::translate(transform, pointLight.Position);
+            transform = glm::scale(transform, glm::vec3(0.1f));
+		    shaderLib.Get("PointLightSource")->UploadFloat3("u_LightSourceColor", pointLight.Color * pointLight.Intensity);
+		    Renderer::Submit(m_PointLightModel, shaderLib.Get("PointLightSource"), transform);
+        }
+		
+		Renderer::EndScene();
     }
+	m_PingPongPostProcessFBO->Unbind();
+
+	// Converting from HDR to LDR
+	{
+	    m_FinalResultFBO->Bind();
+		Renderer::Clear();
+
+		Renderer::RenderScreenQuad(shaderLib.Get("HDRtoLDR"),{
+			m_PingPongPostProcessFBO->GetColorAttachmentRendererID(1)
+		});
+
+		m_FinalResultFBO->Unbind();
+	}
 }
 
 void EditorLayer::OnImGuiRender()
@@ -238,7 +348,7 @@ void EditorLayer::OnImGuiRender()
 
     Application::Get().GetImGuiLayer()->BlockEvents(!viewportIsReadyForInteraction);
 
-    const uint64_t textureID = m_ViewportFBO->GetColorAttachmentRendererID();
+    const uint64_t textureID = m_FinalResultFBO->GetColorAttachmentRendererID();
     ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2( m_ViewportSize.x, m_ViewportSize.y ), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
     ImGui::End();
 
@@ -252,6 +362,14 @@ void EditorLayer::OnImGuiRender()
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
     ImGui::End();
+
+	ImGui::Begin("Light props");
+	ImGui::DragFloat3("Position", glm::value_ptr(m_PointLightsInfo[0].Position), 0.01f);
+	ImGui::ColorEdit3("Color", glm::value_ptr(m_PointLightsInfo[0].Color));
+	ImGui::DragFloat("Linear", &m_PointLightsInfo[0].Linear, 0.001f, 0.0f, 1.0f);
+	ImGui::DragFloat("Quadratic", &m_PointLightsInfo[0].Quadratic, 0.001f, 0.0f, 1.0f);
+	ImGui::DragFloat("Intensity", &m_PointLightsInfo[0].Intensity, 0.01f, 0.0f, 10.0f);
+	ImGui::End();
 
 	ImGui::End();
 }

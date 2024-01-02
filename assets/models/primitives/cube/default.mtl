@@ -11,7 +11,6 @@ newmtl default
   Kd 1 1 1
   Ks 0.2 0.2 0.2
   Ke 0 0 0
-map_Kd rock_wall_10_diff_4k.png
-map_Kn rock_wall_10_nor_gl_4k.png
-map_Ks rock_wall_10_arm_4k.png
-disp bricks2_disp.jpg
+map_Kd rocky_trail_diff_4k.png
+map_Kn rocky_trail_nor_gl_4k.png
+disp rocky_trail_disp_4k.png

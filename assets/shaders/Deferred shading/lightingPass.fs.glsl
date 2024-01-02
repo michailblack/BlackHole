@@ -2,65 +2,62 @@
 
 layout (location = 0) out vec4 o_Color;
 
-in vec2 v_TexCoord;
-
-const int MAX_POINT_LIGHTS_COUNT = 1;
-
-struct PointLight
+layout (location = 0) in VS_OUT
 {
-	vec3 Position;
-	vec3 Color;
-
-	float Linear;
-	float Quadratic;
-};
+	vec2 TexCoord;
+	vec3 FragmentPosition;
+} fs_in;
 
 layout (std140, binding = 0) uniform Matrices
 {
 	mat4 u_Projection;
 	mat4 u_View;
+	mat4 u_InverseProjection;
+	mat4 u_InverseView;
 };
 
-layout (std140, binding = 1) uniform PointLigths
+struct PointLight
 {
-	PointLight PointLights[MAX_POINT_LIGHTS_COUNT];
+	vec3 Position;
+	vec3 Color;
+	
+	float Linear;
+	float Quadratic;
+
+	float VolumeRadius;
 };
 
 uniform sampler2D u_Position;
 uniform sampler2D u_Normal;
 uniform sampler2D u_AlbedoSpec;
+uniform PointLight u_PointLight;
 
 void main()
 {
-	vec3 fragmentPos     = texture(u_Position  , v_TexCoord).rgb;
-	vec3 normal          = texture(u_Normal    , v_TexCoord).rgb;
-	vec3 albedo          = texture(u_AlbedoSpec, v_TexCoord).rgb;
+	vec3 fragmentPos = texture(u_Position  , fs_in.TexCoord).rgb;
+	vec3 normal      = texture(u_Normal    , fs_in.TexCoord).rgb;
+	vec3 albedo      = texture(u_AlbedoSpec, fs_in.TexCoord).rgb;
 
-	vec3 viewDir = normalize(-fragmentPos);
-
-	// ambient color
-	vec3 fragmentColor = albedo * 0.1;
+	if (normal == vec3(0.0))
+		discard;
 	
-	for (uint i = 0; i < MAX_POINT_LIGHTS_COUNT; ++i)
-	{
-		vec3 lightPosition = (u_View * vec4(PointLights[i].Position, 1.0)).xyz;
-		vec3 lightDir = normalize(lightPosition - fragmentPos);
+	vec3 lightPosition = (u_View * vec4(u_PointLight.Position, 1.0)).xyz;
+
+	if (length(fragmentPos - lightPosition) > u_PointLight.VolumeRadius)
+		discard;
+	
+	vec3 fragmentColor = vec3(0.0);
+	
+	vec3 lightDir = normalize(lightPosition - fragmentPos);
 		
-		// diffuse color
-		vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * PointLights[i].Color;
-
-		// attenuation
-        float dist = length(lightPosition - fragmentPos);
-        float attenuation = 1.0 / (1.0 + PointLights[i].Linear * dist + PointLights[i].Quadratic * dist * dist);
-
-		fragmentColor += diffuse * attenuation;
-	}
-
-	float exposure = 1.0;
-	fragmentColor = vec3(1.0) - exp(-fragmentColor * exposure);
-
-	float gamma = 2.2;
-	fragmentColor = pow(fragmentColor, vec3(1.0 / gamma));
+	// diffuse color
+	vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * u_PointLight.Color;
+	
+	// attenuation
+    float dist = length(lightPosition - fragmentPos);
+    float attenuation = 1.0 / (1.0 + u_PointLight.Linear * dist + u_PointLight.Quadratic * dist * dist);
+	
+	fragmentColor += diffuse * attenuation;
 
 	o_Color = vec4(fragmentColor, 1.0);
 }

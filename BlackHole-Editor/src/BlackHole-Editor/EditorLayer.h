@@ -1,6 +1,15 @@
 #pragma once
 #include "BlackHole.h"
 
+struct PointLight
+{
+    glm::vec3 Position;
+    glm::vec3 Color;
+    float Linear;
+    float Quadratic;
+    float Intensity;
+};
+
 class EditorLayer : public Layer
 {
 public:
@@ -13,14 +22,17 @@ public:
     void OnImGuiRender() override;
     void OnEvent(Event& e) override;
 private:
-    Ref<Framebuffer> m_ViewportFBO;
+    Ref<Framebuffer> m_FinalResultFBO;
     Ref<Framebuffer> m_GBufferFBO;
-
-    Ref<UniformBuffer> m_PointLights;
+    Ref<Framebuffer> m_PingPongPostProcessFBO;
 
     PerspectiveCameraController m_CameraController;
 
-    Ref<Model> m_Model;
+    Ref<Model> m_FloorModel;
+    Ref<Model> m_CarModel;
+    Ref<Model> m_PointLightModel;
+
+    std::vector<PointLight> m_PointLightsInfo;
 
     bool m_ViewportFocused = false;
     bool m_ViewportHovered = false;

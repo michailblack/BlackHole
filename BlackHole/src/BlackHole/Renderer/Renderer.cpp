@@ -24,7 +24,7 @@ struct RendererData
 
 void Renderer::Init()
 {
-    s_Data.MatricesUniformBuffer = CreateRef<UniformBuffer>(2 * sizeof(glm::mat4), 0);
+    s_Data.MatricesUniformBuffer = CreateRef<UniformBuffer>(6 * sizeof(glm::mat4), 0);
 
     ShaderSpecification modelShaderSpec;
     modelShaderSpec.VertexPath = Filesystem::GetShadersPath() / "model.vs.glsl";
@@ -134,9 +134,11 @@ void Renderer::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t heig
 
 void Renderer::BeginScene(const PerspectiveCamera& camera)
 {
-    auto* const matricesUniformBufferRange = static_cast<glm::mat4*>(s_Data.MatricesUniformBuffer->Map(0, 2 * sizeof(glm::mat4)));
-    *matricesUniformBufferRange = camera.GetProjectionMatrix();
+    auto* const matricesUniformBufferRange = static_cast<glm::mat4*>(s_Data.MatricesUniformBuffer->Map(0, 6 * sizeof(glm::mat4)));
+    *matricesUniformBufferRange       = camera.GetProjectionMatrix();
     *(matricesUniformBufferRange + 1) = camera.GetViewMatrix();
+    *(matricesUniformBufferRange + 2) = glm::inverse(camera.GetProjectionMatrix());
+    *(matricesUniformBufferRange + 3) = glm::inverse(camera.GetViewMatrix());
     s_Data.MatricesUniformBuffer->Unmap();
 }
 
@@ -152,6 +154,9 @@ void Renderer::Submit(const Ref<Model>& model, const Ref<Shader>& shader, const 
     if (model->GetNormalMapArray().get())
         model->GetNormalMapArray()->Bind(1);
 
+    if (model->GetDisplacementMapArray().get())
+        model->GetDisplacementMapArray()->Bind(2);
+
     shader->Bind();
     shader->UploadMat4("u_Model", transform);
 
@@ -164,6 +169,7 @@ void Renderer::Submit(const Ref<Model>& model, const Ref<Shader>& shader, const 
 
         shader->UploadUint("u_Material.DiffuseLayer", mesh->GetDiffuseTextureLayer());
         shader->UploadUint("u_Material.NormalLayer", mesh->GetNormalLayer());
+        shader->UploadUint("u_Material.DisplacementLayer", mesh->GetDisplacementLayer());
 
         vertexArray->Bind();
         if (pointIndicesCount)
