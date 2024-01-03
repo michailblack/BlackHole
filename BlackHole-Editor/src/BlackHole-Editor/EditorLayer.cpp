@@ -117,6 +117,8 @@ void EditorLayer::OnAttach()
 
 	m_FloorModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/floor/floor.obj");
 	m_CarModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/covered_car_1k/covered_car_1k.obj");
+	m_BarrelModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/barrel_stove_1k/barrel_stove_1k.obj");
+	m_UtilityBoxModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/utility_box_02_1k/utility_box_02_1k.obj");
 	m_PointLightModel = CreateRef<Model>(Filesystem::GetModelsPath() / "scene/point_light/sphere.obj");
 
 	ShaderSpecification shSpec;
@@ -143,20 +145,44 @@ void EditorLayer::OnAttach()
 	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_Normal", 1);
 	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_AlbedoSpec", 2);
 	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_LightMap", 3);
+	Renderer::GetShaderLibrary().Get("LightingMap")->UploadInt("u_Skybox", 4);
 
 	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
 	shSpec.FragmentPath = Filesystem::GetShadersPath() / "HDRtoLDR.fs.glsl";
 	Renderer::GetShaderLibrary().Load("HDRtoLDR", shSpec);
 	Renderer::GetShaderLibrary().Get("HDRtoLDR")->UploadInt("u_Scene", 0);
 
+	shSpec.VertexPath = Filesystem::GetShadersPath() / "screenSquad.vs.glsl";
+	shSpec.FragmentPath = Filesystem::GetShadersPath() / "gaussianBlur.fs.glsl";
+	Renderer::GetShaderLibrary().Load("GaussianBlur", shSpec);
+	Renderer::GetShaderLibrary().Get("GaussianBlur")->UploadInt("u_Scene", 0);
+
+	CubemapSpecification cbSpec;
+    cbSpec.Right  = Filesystem::GetTexturesPath() / "skyboxes/mountains/right.jpg";
+    cbSpec.Left   = Filesystem::GetTexturesPath() / "skyboxes/mountains/left.jpg";
+    cbSpec.Top    = Filesystem::GetTexturesPath() / "skyboxes/mountains/top.jpg";
+    cbSpec.Bottom = Filesystem::GetTexturesPath() / "skyboxes/mountains/bottom.jpg";
+    cbSpec.Front  = Filesystem::GetTexturesPath() / "skyboxes/mountains/front.jpg";
+    cbSpec.Back   = Filesystem::GetTexturesPath() / "skyboxes/mountains/back.jpg";
+	m_SkyboxCubemap = CreateRef<Cubemap>(cbSpec);
+
 	PointLight pointLight;
+
+	pointLight.Position = { -1.0f, 1.5f, -1.0f };
+	pointLight.Color = { 0.0f, 1.0f, 0.0f };
+	pointLight.Linear = 0.22f;
+	pointLight.Quadratic = 0.2f;
+	pointLight.Intensity = 1.0f;
+	m_PointLightsInfo.push_back(pointLight);
+
 	pointLight.Position = { 1.0f, 1.0f, -2.0f };
 	pointLight.Color = { 1.0f, 0.0f, 0.0f };
 	pointLight.Linear = 0.7f;
 	pointLight.Quadratic = 1.8f;
 	pointLight.Intensity = 1.0f;
-
 	m_PointLightsInfo.push_back(pointLight);
+
+	
 }
 
 void EditorLayer::OnDetach()
@@ -195,12 +221,23 @@ void EditorLayer::OnUpdate(Timestep ts)
 		// Drawing all meshes to obtain info for G-buffer
 		Renderer::BeginScene(m_CameraController.GetCamera());
 
-		glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
-		transform = glm::translate(transform, glm::vec3(0.0f, -0.5f, 0.0));
-		Renderer::Submit(m_FloorModel, shaderLib.Get("GeometryPass"), transform);
+		glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(0.0f, -0.5f, 0.0));
+        transform = glm::scale(transform, glm::vec3(10.0f, 1.0f, 10.0f));
+        Renderer::Submit(m_FloorModel, shaderLib.Get("GeometryPass"), transform);
 
-		transform = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
+		transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(3.0f, 0.0f, 0.0f));
 		Renderer::Submit(m_CarModel, shaderLib.Get("GeometryPass"), transform);
+
+		transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(-2.0f, 0.0f, -1.5f));
+		Renderer::Submit(m_BarrelModel, shaderLib.Get("GeometryPass"), transform);
+
+		transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(-3.0f, 0.0f, 2.0f));
+		transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0));
+		Renderer::Submit(m_UtilityBoxModel, shaderLib.Get("GeometryPass"), transform);
 
 		Renderer::EndScene();
 
@@ -219,6 +256,13 @@ void EditorLayer::OnUpdate(Timestep ts)
 
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
+        glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+        glBlendFuncSeparatei(0, GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+
+        glBindTextureUnit(0, m_GBufferFBO->GetColorAttachmentRendererID());
+		glBindTextureUnit(1, m_GBufferFBO->GetColorAttachmentRendererID(1));
+		glBindTextureUnit(2, m_GBufferFBO->GetColorAttachmentRendererID(2));
         for (const auto& pointLight : m_PointLightsInfo)
         {
 			const float lightMax = glm::max(glm::max(pointLight.Color.r, pointLight.Color.g), pointLight.Color.b);
@@ -228,9 +272,6 @@ void EditorLayer::OnUpdate(Timestep ts)
             transform = glm::translate(transform, pointLight.Position);
             transform = glm::scale(transform, glm::vec3(lightVolumeRadius));
 
-            glBindTextureUnit(0, m_GBufferFBO->GetColorAttachmentRendererID());
-			glBindTextureUnit(1, m_GBufferFBO->GetColorAttachmentRendererID(1));
-			glBindTextureUnit(2, m_GBufferFBO->GetColorAttachmentRendererID(2));
             shaderLib.Get("LightingPass")->UploadFloat3("u_PointLight.Position", pointLight.Position);
             shaderLib.Get("LightingPass")->UploadFloat3("u_PointLight.Color", pointLight.Color * pointLight.Intensity);
 			shaderLib.Get("LightingPass")->UploadFloat("u_PointLight.Linear", pointLight.Linear);
@@ -239,13 +280,24 @@ void EditorLayer::OnUpdate(Timestep ts)
 
 			Renderer::Submit(m_PointLightModel, shaderLib.Get("LightingPass"), transform);
         }
+		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 
 		Renderer::EndScene();
 
-	    // Applying lighting map
+		// Blurring the lighting map
 		glDisable(GL_DEPTH_TEST);
 		Renderer::BeginScene(m_CameraController.GetCamera());
+		shaderLib.Get("GaussianBlur")->UploadFloat("u_ViewportWidth", static_cast<float>(spec.Width));
+		shaderLib.Get("GaussianBlur")->UploadFloat("u_ViewportHeight", static_cast<float>(spec.Height));
+		Renderer::RenderScreenQuad(shaderLib.Get("GaussianBlur"), {
+			m_PingPongPostProcessFBO->GetColorAttachmentRendererID()
+		});
+		Renderer::EndScene();
+
+	    // Applying lighting map
+		Renderer::BeginScene(m_CameraController.GetCamera());
+		m_SkyboxCubemap->Bind(4);
 		Renderer::RenderScreenQuad(shaderLib.Get("LightingMap"), {
 			m_GBufferFBO->GetColorAttachmentRendererID(),
 			m_GBufferFBO->GetColorAttachmentRendererID(1),
@@ -279,9 +331,11 @@ void EditorLayer::OnUpdate(Timestep ts)
 	    m_FinalResultFBO->Bind();
 		Renderer::Clear();
 
+		glDisable(GL_DEPTH_TEST);
 		Renderer::RenderScreenQuad(shaderLib.Get("HDRtoLDR"),{
 			m_PingPongPostProcessFBO->GetColorAttachmentRendererID(1)
 		});
+		glEnable(GL_DEPTH_TEST);
 
 		m_FinalResultFBO->Unbind();
 	}
@@ -363,12 +417,20 @@ void EditorLayer::OnImGuiRender()
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
     ImGui::End();
 
-	ImGui::Begin("Light props");
+	ImGui::Begin("Light props[0]");
 	ImGui::DragFloat3("Position", glm::value_ptr(m_PointLightsInfo[0].Position), 0.01f);
 	ImGui::ColorEdit3("Color", glm::value_ptr(m_PointLightsInfo[0].Color));
-	ImGui::DragFloat("Linear", &m_PointLightsInfo[0].Linear, 0.001f, 0.0f, 1.0f);
-	ImGui::DragFloat("Quadratic", &m_PointLightsInfo[0].Quadratic, 0.001f, 0.0f, 1.0f);
+	ImGui::DragFloat("Linear", &m_PointLightsInfo[0].Linear, 0.001f, 0.0f, 2.0f);
+	ImGui::DragFloat("Quadratic", &m_PointLightsInfo[0].Quadratic, 0.001f, 0.0f, 2.0f);
 	ImGui::DragFloat("Intensity", &m_PointLightsInfo[0].Intensity, 0.01f, 0.0f, 10.0f);
+	ImGui::End();
+
+	ImGui::Begin("Light props[1]");
+	ImGui::DragFloat3("Position", glm::value_ptr(m_PointLightsInfo[1].Position), 0.01f);
+	ImGui::ColorEdit3("Color", glm::value_ptr(m_PointLightsInfo[1].Color));
+	ImGui::DragFloat("Linear", &m_PointLightsInfo[1].Linear, 0.001f, 0.0f, 2.0f);
+	ImGui::DragFloat("Quadratic", &m_PointLightsInfo[1].Quadratic, 0.001f, 0.0f, 2.0f);
+	ImGui::DragFloat("Intensity", &m_PointLightsInfo[1].Intensity, 0.01f, 0.0f, 10.0f);
 	ImGui::End();
 
 	ImGui::End();

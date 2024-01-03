@@ -3,6 +3,7 @@
 layout (location = 0) out vec4 o_Color;
 
 in vec2 v_TexCoord;
+in vec3 v_SkyboxCoord;
 
 layout (std140, binding = 0) uniform Matrices
 {

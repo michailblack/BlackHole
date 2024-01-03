@@ -30,7 +30,11 @@ private:
 
     Ref<Model> m_FloorModel;
     Ref<Model> m_CarModel;
+    Ref<Model> m_BarrelModel;
+    Ref<Model> m_UtilityBoxModel;
     Ref<Model> m_PointLightModel;
+
+    Ref<Cubemap> m_SkyboxCubemap;
 
     std::vector<PointLight> m_PointLightsInfo;
 

@@ -46,8 +46,6 @@ void main()
 	if (length(fragmentPos - lightPosition) > u_PointLight.VolumeRadius)
 		discard;
 	
-	vec3 fragmentColor = vec3(0.0);
-	
 	vec3 lightDir = normalize(lightPosition - fragmentPos);
 		
 	// diffuse color
@@ -57,7 +55,7 @@ void main()
     float dist = length(lightPosition - fragmentPos);
     float attenuation = 1.0 / (1.0 + u_PointLight.Linear * dist + u_PointLight.Quadratic * dist * dist);
 	
-	fragmentColor += diffuse * attenuation;
+	vec3 fragmentColor = diffuse * attenuation;
 
 	o_Color = vec4(fragmentColor, 1.0);
 }
