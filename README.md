@@ -1,13 +1,13 @@
-# Black Hole
+# BlackHole
 
-Black Hole is an early-stage renderer written using modern OpenGL. This project primarily was created for learning purposes, but it may grow into something bigger over time.
+BlackHole is an early-stage renderer written using modern OpenGL. This project primarily was created for learning purposes, but it may grow into something bigger over time.
 
 ***
 
 ## Screenshots
 
 Currently the program looks like this:
-![Screenshot of the program](/resources/screenshots/BlackHole_Screenshot_07.08.23.png?raw=true "Black Hole")
+![Screenshot of the program](/resources/screenshots/BlackHole_Screenshot_11.02.24.png?raw=true "BlackHole")
 
 ***
 
@@ -35,7 +35,7 @@ Now you can make any changes that you want. If you prefer to manually use CMake,
 
 ## The Plan
 
-The plan for Black Hole right now is to implement the necessary features and tools to have an opportunity to create a scene directly from the editor. As an intermediate step in the execution of this plan will be creating a simulation of a black hole.
+The plan for BlackHole right now is to implement the necessary features and tools to have an opportunity to create a scene directly from the editor.
 
 ### Main features to implement:
 
@@ -46,12 +46,8 @@ The plan for Black Hole right now is to implement the necessary features and too
 
 ### Short term features to implement:
 
-- Shadow mapping
-- Normal mapping
-- Parallax mapping
-- HDR
-- Bloom
-- Deferred shading
+- Cascaded shadow mapping
+- Tile-based deferred shading
 - SSAO
 
 ***
@@ -59,5 +55,4 @@ The plan for Black Hole right now is to implement the necessary features and too
 ## Known Issues
 
 - Cube maps uploading failure on some hardware
-- ImGui windows layout mess on first run after cloning the repository
 - ImGui and BlackHole events dispatching conflicts when trying to control Viewport camera via mouse (will investigate this later, when we have complete ECS)
