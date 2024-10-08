@@ -4,6 +4,10 @@ Black Hole is an early-stage renderer written using modern OpenGL. This project 
 
 ***
 
+## Attention
+
+This project is archived and no longer supported. Dependency MichailBlack/imgui is deleted. This repository is used only for code demonstration.
+
 ## Screenshots
 
 Currently the program looks like this:
